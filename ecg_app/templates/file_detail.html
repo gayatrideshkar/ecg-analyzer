@@ -1,0 +1,611 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECG Analysis Details - {{ ecg_file.file_name|default:"ECG File" }}</title>
+    <link rel="stylesheet" href="{% static 'ecg_app/css/styles.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .breadcrumb {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .breadcrumb a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            margin-right: 5px;
+        }
+        
+        .breadcrumb a:hover {
+            color: var(--primary-color);
+        }
+        
+        .file-header-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .file-title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .file-info-section {
+            flex-grow: 1;
+        }
+        
+        .file-main-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-light);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-back {
+            background: var(--text-light);
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-delete-detail {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-delete-detail:hover {
+            background: #c82333;
+        }
+        
+        .image-analysis-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .image-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .ecg-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+        
+        .quick-summary {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .summary-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .summary-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .image-analysis-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .file-title-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .action-buttons {
+                justify-content: center;
+            }
+            
+            .file-meta-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i>
+            <a href="{% url 'home' %}">Home</a> /
+            <a href="{% url 'uploaded_files' %}">Uploaded Files</a> /
+            <span>{{ ecg_file.patient_name|default:"Unknown Patient" }}</span>
+        </div>
+
+        <!-- File Header -->
+        <div class="file-header-section">
+            <div class="file-title-section">
+                <div class="file-info-section">
+                    <h1 class="file-main-title">
+                        <i class="fas fa-user-md"></i>
+                        {{ ecg_file.patient_name|default:"Unknown Patient" }}
+                    </h1>
+                    
+                    <div class="file-meta-grid">
+                        <div class="meta-item">
+                            <i class="fas fa-user"></i>
+                            <span><strong>Patient:</strong> {{ ecg_file.patient_name|default:"Unknown" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-birthday-cake"></i>
+                            <span><strong>Age:</strong> {{ ecg_file.patient_age|default:"N/A" }} years</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span><strong>Date of Birth:</strong> {{ ecg_file.patient_dob|date:"F d, Y"|default:"N/A" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-phone"></i>
+                            <span><strong>Phone:</strong> {{ ecg_file.patient_phone|default:"Not provided" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-file-medical"></i>
+                            <span><strong>File:</strong> {{ ecg_file.file_name|default:"ECG File" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <span><strong>Date:</strong> {{ ecg_file.uploaded_at|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span><strong>Time:</strong> {{ ecg_file.uploaded_at|date:"H:i" }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-hdd"></i>
+                            <span><strong>Size:</strong> {{ ecg_file.get_file_size_display }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-hashtag"></i>
+                            <span><strong>ID:</strong> {{ ecg_file.id }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="{% url 'uploaded_files' %}" class="btn-action btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Files
+                    </a>
+                    <button onclick="refreshToHome()" class="btn-action" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                        <i class="fas fa-sync-alt"></i> Refresh to Home
+                    </button>
+                    <button class="btn-action btn-delete-detail" onclick="confirmDelete({{ ecg_file.id }}, '{{ ecg_file.file_name|default:"this file" }}')">
+                        <i class="fas fa-trash"></i> Delete File
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if result and result.error %}
+            <!-- Error Display -->
+            <div class="results-card">
+                <div class="results-header" style="background: linear-gradient(135deg, var(--danger-color), #e74c3c);">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Analysis Error</h3>
+                </div>
+                <div class="results-content">
+                    <p style="color: var(--danger-color); font-size: 1.1rem;">{{ result.error }}</p>
+                </div>
+            </div>
+        {% elif result %}
+            <!-- Image and Quick Summary -->
+            <div class="image-analysis-container">
+                <div class="image-container">
+                    <h3><i class="fas fa-image"></i> ECG Image</h3>
+                    {% if image_url %}
+                        <img src="{{ image_url }}" alt="ECG Image" class="ecg-image">
+                        <p><i class="fas fa-info-circle"></i> Click to view full size</p>
+                    {% else %}
+                        <div style="padding: 40px; color: var(--text-light);">
+                            <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                            <p>Image not available</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="quick-summary">
+                    <h3><i class="fas fa-chart-pulse"></i> Analysis Summary</h3>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="summary-value">
+                                {{ result.image_quality.quality }}
+                            </div>
+                            <div class="summary-label">Image Quality</div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-value">
+                                {% if result.heart_rate.bpm != "Unable to determine" %}
+                                    {{ result.heart_rate.bpm }} BPM
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="summary-label">Heart Rate</div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-value">
+                                {{ result.rhythm_analysis.primary_rhythm }}
+                            </div>
+                            <div class="summary-label">Rhythm</div>
+                        </div>
+                        
+                        <div class="summary-card">
+                            <div class="summary-value">
+                                {{ result.technical_details.signal_clarity }}
+                            </div>
+                            <div class="summary-label">Signal Clarity</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Analysis Results (Reuse from upload template) -->
+            <div class="results-section">
+                <div class="results-card">
+                    <div class="results-header">
+                        <h3><i class="fas fa-chart-pulse"></i> Detailed ECG Analysis</h3>
+                    </div>
+                    
+                    <div class="results-content">
+                        <!-- Quick Overview -->
+                        <div class="analysis-grid">
+                            <!-- Image Quality -->
+                            <div class="analysis-item">
+                                <h4><i class="fas fa-image"></i> Image Quality</h4>
+                                <div class="analysis-value">
+                                    {{ result.image_quality.quality }}
+                                    <span class="status-badge badge-{% if result.image_quality.score > 80 %}success{% elif result.image_quality.score > 60 %}warning{% else %}info{% endif %}">
+                                        {{ result.image_quality.score }}%
+                                    </span>
+                                </div>
+                                <div class="analysis-detail">{{ result.image_quality.details }}</div>
+                            </div>
+
+                            <!-- Heart Rate -->
+                            <div class="analysis-item">
+                                <h4><i class="fas fa-heartbeat"></i> Heart Rate</h4>
+                                <div class="analysis-value">
+                                    {% if result.heart_rate.bpm != "Unable to determine" %}
+                                        {{ result.heart_rate.bpm }} BPM
+                                    {% else %}
+                                        {{ result.heart_rate.bpm }}
+                                    {% endif %}
+                                </div>
+                                <div class="analysis-detail">
+                                    {% if result.heart_rate.classification != "Unknown" %}
+                                        {{ result.heart_rate.classification }}<br>
+                                        <small>Confidence: {{ result.heart_rate.confidence }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Rhythm Analysis -->
+                            <div class="analysis-item">
+                                <h4><i class="fas fa-wave-square"></i> Rhythm Analysis</h4>
+                                <div class="analysis-value">{{ result.rhythm_analysis.primary_rhythm }}</div>
+                                <div class="analysis-detail">
+                                    Pattern: {{ result.rhythm_analysis.regularity }}<br>
+                                    <small>{{ result.rhythm_analysis.notes }}</small>
+                                </div>
+                            </div>
+
+                            <!-- Technical Details -->
+                            <div class="analysis-item">
+                                <h4><i class="fas fa-cogs"></i> Technical Details</h4>
+                                <div class="analysis-value">{{ result.technical_details.signal_clarity }}</div>
+                                <div class="analysis-detail">
+                                    Dimensions: {{ result.technical_details.image_dimensions }}<br>
+                                    Detected Features: {{ result.technical_details.detected_waves }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Analysis Tabs -->
+                        <div class="findings-section">
+                            <div class="findings-tabs">
+                                <button class="tab-button active" data-tab="waves">
+                                    <i class="fas fa-chart-line"></i> Wave Analysis
+                                </button>
+                                <button class="tab-button" data-tab="findings">
+                                    <i class="fas fa-search"></i> Clinical Findings
+                                </button>
+                                <button class="tab-button" data-tab="recommendations">
+                                    <i class="fas fa-user-md"></i> Recommendations
+                                </button>
+                            </div>
+
+                            <!-- Wave Morphology Tab -->
+                            <div class="tab-content active" id="waves">
+                                <h4><i class="fas fa-wave-square"></i> Wave Morphology Analysis</h4>
+                                
+                                <div class="analysis-grid">
+                                    <div class="analysis-item">
+                                        <h5>P Wave</h5>
+                                        <p><strong>Present:</strong> {{ result.wave_morphology.p_wave.present|yesno:"Yes,No" }}</p>
+                                        <p><strong>Morphology:</strong> {{ result.wave_morphology.p_wave.morphology }}</p>
+                                        <p><strong>Duration:</strong> {{ result.wave_morphology.p_wave.duration }}</p>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5>QRS Complex</h5>
+                                        <p><strong>Width:</strong> {{ result.wave_morphology.qrs_complex.width }}</p>
+                                        <p><strong>Amplitude:</strong> {{ result.wave_morphology.qrs_complex.amplitude }}</p>
+                                        <p><strong>Morphology:</strong> {{ result.wave_morphology.qrs_complex.morphology }}</p>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5>T Wave</h5>
+                                        <p><strong>Polarity:</strong> {{ result.wave_morphology.t_wave.polarity }}</p>
+                                        <p><strong>Symmetry:</strong> {{ result.wave_morphology.t_wave.symmetry }}</p>
+                                        <p><strong>Amplitude:</strong> {{ result.wave_morphology.t_wave.amplitude }}</p>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5>Intervals</h5>
+                                        <p><strong>PR Interval:</strong> {{ result.wave_morphology.intervals.pr_interval }}</p>
+                                        <p><strong>QT Interval:</strong> {{ result.wave_morphology.intervals.qt_interval }}</p>
+                                        <p><strong>QRS Duration:</strong> {{ result.wave_morphology.intervals.qrs_duration }}</p>
+                                        {% if result.wave_morphology.intervals.qtc_corrected %}
+                                        <p><strong>QTc (Corrected):</strong> {{ result.wave_morphology.intervals.qtc_corrected }}</p>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if result.wave_morphology.st_segment %}
+                                    <div class="analysis-item">
+                                        <h5>ST Segment</h5>
+                                        <p><strong>Elevation/Depression:</strong> {{ result.wave_morphology.st_segment.elevation }}</p>
+                                        <p><strong>Morphology:</strong> {{ result.wave_morphology.st_segment.morphology }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Clinical Findings Tab -->
+                            <div class="tab-content" id="findings">
+                                <h4><i class="fas fa-stethoscope"></i> Clinical Interpretation</h4>
+                                
+                                <div style="margin-bottom: 20px;">
+                                    <h5>Primary Findings</h5>
+                                    <ul class="finding-list">
+                                        {% for finding in result.clinical_findings.primary_findings %}
+                                        <li>{{ finding }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                <div style="margin-bottom: 20px;">
+                                    <h5>Secondary Findings</h5>
+                                    <ul class="finding-list">
+                                        {% for finding in result.clinical_findings.secondary_findings %}
+                                        <li>{{ finding }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                <div class="analysis-item" style="background: #e8f5e8; border-left-color: var(--success-color);">
+                                    <h5><i class="fas fa-clipboard-check"></i> Overall Impression</h5>
+                                    <p style="font-size: 1.1rem; font-weight: 500;">{{ result.clinical_findings.overall_impression }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Recommendations Tab -->
+                            <div class="tab-content" id="recommendations">
+                                <h4><i class="fas fa-user-md"></i> Medical Recommendations</h4>
+                                
+                                <div class="recommendations">
+                                    <h5><i class="fas fa-exclamation-circle"></i> Immediate Actions</h5>
+                                    <ul class="recommendation-list">
+                                        {% for action in result.recommendations.immediate_actions %}
+                                        <li>{{ action }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                <div class="recommendations" style="background: #fff3cd; border-left-color: var(--warning-color);">
+                                    <h5 style="color: var(--warning-color);"><i class="fas fa-calendar-alt"></i> Follow-up Care</h5>
+                                    <ul class="recommendation-list">
+                                        {% for followup in result.recommendations.follow_up %}
+                                        <li>{{ followup }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                <div class="recommendations" style="background: #d1ecf1; border-left-color: var(--secondary-color);">
+                                    <h5 style="color: var(--secondary-color);"><i class="fas fa-heart"></i> Lifestyle Recommendations</h5>
+                                    <ul class="recommendation-list">
+                                        {% for lifestyle in result.recommendations.lifestyle %}
+                                        <li>{{ lifestyle }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medical Disclaimer -->
+                        <div class="disclaimer">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Medical Disclaimer:</strong>
+                            {{ result.recommendations.disclaimer }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="results-card">
+                <div class="results-header" style="background: linear-gradient(135deg, var(--warning-color), #ffc107);">
+                    <h3><i class="fas fa-exclamation-circle"></i> No Analysis Data</h3>
+                </div>
+                <div class="results-content">
+                    <p>No analysis results are available for this file.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Delete Confirmation Modal (same as uploaded_files.html) -->
+    <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--warning-color); margin-bottom: 20px;"></i>
+            <h3>Confirm Deletion</h3>
+            <p id="deleteMessage">Are you sure you want to delete this file?</p>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                <button onclick="hideDeleteModal()" style="background: var(--text-light); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: var(--danger-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'ecg_app/css/styles.css' %}"></script>
+    <script>
+        // Refresh functionality
+        function refreshToHome() {
+            const refreshBtn = event.target.closest('button');
+            const originalContent = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+            
+            window.location.href = '/refresh/';
+        }
+        
+        // Tab functionality (same as upload template)
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabName = button.getAttribute('data-tab');
+                    
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    button.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+                });
+            });
+
+            // Image click to full size
+            const ecgImage = document.querySelector('.ecg-image');
+            if (ecgImage) {
+                ecgImage.addEventListener('click', function() {
+                    window.open(this.src, '_blank');
+                });
+                ecgImage.style.cursor = 'pointer';
+            }
+        });
+
+        function confirmDelete(fileId, fileName) {
+            document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${fileName}"? This action cannot be undone.`;
+            document.getElementById('deleteForm').action = `/delete/${fileId}/`;
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+        
+        function hideDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+        
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideDeleteModal();
+            }
+        });
+
+        // Handle delete form submission
+        document.getElementById('deleteForm').addEventListener('submit', function() {
+            // Redirect to uploaded files after deletion
+            setTimeout(function() {
+                window.location.href = '{% url "uploaded_files" %}';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
