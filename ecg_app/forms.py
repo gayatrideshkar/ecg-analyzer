@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import ECGImage
+from .models import ECGImage, EchoImage
 
 
 class SignUpForm(UserCreationForm):
@@ -94,7 +94,7 @@ class LoginForm(forms.Form):
 class ECGImageForm(forms.ModelForm):
     class Meta:
         model = ECGImage
-        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_phone', 'image']
+        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_gender', 'patient_phone', 'image']
         widgets = {
             'patient_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -114,6 +114,10 @@ class ECGImageForm(forms.ModelForm):
                 'type': 'date',
                 'required': True
             }),
+            'patient_gender': forms.Select(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
             'patient_phone': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter phone number (e.g., +1-234-567-8900)',
@@ -130,6 +134,7 @@ class ECGImageForm(forms.ModelForm):
             'patient_name': 'Full Name',
             'patient_age': 'Age',
             'patient_dob': 'Date of Birth',
+            'patient_gender': 'Gender',
             'patient_phone': 'Phone Number',
             'image': 'ECG Image File'
         }
@@ -146,6 +151,105 @@ class ECGImageForm(forms.ModelForm):
         phone = self.cleaned_data.get('patient_phone')
         if not phone:
             raise forms.ValidationError('Please enter the patient\'s phone number.')
+        
+        # Remove spaces, dashes, and parentheses for validation
+        cleaned_phone = ''.join(char for char in phone if char.isdigit() or char == '+')
+        if len(cleaned_phone) < 10:
+            raise forms.ValidationError('Please enter a valid phone number with at least 10 digits.')
+        return phone
+    
+    def clean_patient_name(self):
+        name = self.cleaned_data.get('patient_name')
+        if not name or not name.strip():
+            raise forms.ValidationError('Please enter the patient\'s full name.')
+        return name.strip()
+    
+    def clean_patient_dob(self):
+        from datetime import date
+        dob = self.cleaned_data.get('patient_dob')
+        if not dob:
+            raise forms.ValidationError('Please enter the patient\'s date of birth.')
+        
+        # Check if date is not in the future
+        if dob > date.today():
+            raise forms.ValidationError('Date of birth cannot be in the future.')
+        
+        # Check if date is reasonable (not more than 150 years ago)
+        from datetime import timedelta
+        max_age_date = date.today() - timedelta(days=150*365)
+        if dob < max_age_date:
+            raise forms.ValidationError('Please enter a valid date of birth.')
+        
+        return dob
+
+
+class EchoUploadForm(forms.ModelForm):
+    """Form for uploading 2D Echocardiogram videos"""
+    
+    class Meta:
+        model = EchoImage
+        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_phone', 'patient_gender', 'echo_file']
+        widgets = {
+            'patient_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter patient full name',
+                'required': True
+            }),
+            'patient_age': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter patient age',
+                'min': 0,
+                'max': 150,
+                'required': True
+            }),
+            'patient_dob': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'required': True
+            }),
+            'patient_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter phone number (e.g., +1-234-567-8901)',
+                'required': True
+            }),
+            'patient_gender': forms.Select(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
+            'echo_file': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'video/*,.avi,.mp4,.mov,.wmv,.flv,.webm',
+                'required': True
+            })
+        }
+    
+    def clean_echo_file(self):
+        echo_file = self.cleaned_data.get('echo_file')
+        if not echo_file:
+            raise forms.ValidationError('Please select an echocardiogram video file.')
+        
+        # Check file extension
+        allowed_extensions = ['.avi', '.mp4', '.mov', '.wmv', '.flv', '.webm', '.mkv']
+        file_extension = echo_file.name.lower().split('.')[-1]
+        if f'.{file_extension}' not in allowed_extensions:
+            raise forms.ValidationError(
+                f'Please upload a valid video file. Supported formats: {", ".join(allowed_extensions)}'
+            )
+        
+        # Check file size (limit to 500MB)
+        max_size = 500 * 1024 * 1024  # 500MB in bytes
+        if echo_file.size > max_size:
+            raise forms.ValidationError(
+                f'File size too large. Please upload a file smaller than 500MB. '
+                f'Current size: {echo_file.size / (1024*1024):.1f}MB'
+            )
+        
+        return echo_file
+    
+    def clean_patient_phone(self):
+        phone = self.cleaned_data.get('patient_phone')
+        if not phone:
+            raise forms.ValidationError('Please enter a phone number.')
         
         # Remove spaces, dashes, and parentheses for validation
         cleaned_phone = ''.join(char for char in phone if char.isdigit() or char == '+')

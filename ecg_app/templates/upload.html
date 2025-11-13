@@ -22,10 +22,16 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                     <div>
                         <a href="{% url 'home' %}" class="upload-btn" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); text-decoration: none; margin-right: 10px;">
-                            <i class="fas fa-home"></i> Upload New
+                            <i class="fas fa-chart-line"></i> ECG Analysis
                         </a>
-                        <a href="{% url 'uploaded_files' %}" class="upload-btn" style="background: linear-gradient(135deg, #6c757d, #5a6268); text-decoration: none;">
-                            <i class="fas fa-folder-open"></i> Uploaded Files
+                        <a href="{% url 'upload_echo' %}" class="upload-btn" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); text-decoration: none; margin-right: 10px;">
+                            <i class="fas fa-heart"></i> Echo Analysis
+                        </a>
+                        <a href="{% url 'uploaded_files' %}" class="upload-btn" style="background: linear-gradient(135deg, #6c757d, #5a6268); text-decoration: none; margin-right: 10px;">
+                            <i class="fas fa-folder"></i> ECG Files
+                        </a>
+                        <a href="{% url 'echo_files_list' %}" class="upload-btn" style="background: linear-gradient(135deg, #74b9ff, #0984e3); text-decoration: none;">
+                            <i class="fas fa-video"></i> Echo Files
                         </a>
                     </div>
                     <div style="display: flex; align-items: center; gap: 15px;">
@@ -97,6 +103,16 @@
                                 {{ form.patient_dob }}
                                 {% if form.patient_dob.errors %}
                                     <div class="field-error">{{ form.patient_dob.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="field-group">
+                                <label for="{{ form.patient_gender.id_for_label }}" class="field-label">
+                                    <i class="fas fa-venus-mars"></i> {{ form.patient_gender.label }}
+                                </label>
+                                {{ form.patient_gender }}
+                                {% if form.patient_gender.errors %}
+                                    <div class="field-error">{{ form.patient_gender.errors.0 }}</div>
                                 {% endif %}
                             </div>
                             

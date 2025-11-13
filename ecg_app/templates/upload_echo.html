@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Echocardiogram Analysis - Cardiac Diagnostics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .card {
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: none;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 2rem;
+            text-align: center;
+            border: none;
+        }
+        
+        .form-control {
+            border-radius: 15px;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        
+        .alert {
+            border-radius: 15px;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .file-upload-display {
+            display: block;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-display:hover {
+            border-color: #764ba2;
+            background: #e9ecef;
+        }
+        
+        .feature-icon {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .navigation-tabs {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-link {
+            border-radius: 10px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+        }
+        
+        .nav-link:not(.active) {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-link:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0,0,0,0.1);">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-heartbeat"></i> CardiacAI Pro
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-circle"></i> Welcome, {{ user.first_name }}
+                </span>
+                <a class="btn btn-outline-light btn-sm" href="{% url 'logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Navigation Tabs -->
+        <div class="navigation-tabs">
+            <ul class="nav nav-pills justify-content-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'upload_ecg' %}">
+                        <i class="fas fa-chart-line"></i> ECG Analysis
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active">
+                        <i class="fas fa-heart"></i> Echo Analysis
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'uploaded_files' %}">
+                        <i class="fas fa-folder"></i> ECG Files
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'echo_files_list' %}">
+                        <i class="fas fa-video"></i> Echo Files
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Main Upload Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-heart me-2"></i>2D Echocardiogram Analysis</h3>
+                        <p class="mb-0">Upload echocardiogram videos for AI-powered cardiac function assessment</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Display Messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post" enctype="multipart/form-data" id="echoForm">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <!-- Patient Information Section -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-3"><i class="fas fa-user-injured feature-icon"></i>Patient Information</h5>
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form.patient_name.id_for_label }}" class="form-label">
+                                            <i class="fas fa-user"></i> Patient Name
+                                        </label>
+                                        {{ form.patient_name }}
+                                        {% if form.patient_name.errors %}
+                                            <div class="text-danger small">{{ form.patient_name.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.patient_age.id_for_label }}" class="form-label">
+                                            <i class="fas fa-birthday-cake"></i> Age
+                                        </label>
+                                        {{ form.patient_age }}
+                                        {% if form.patient_age.errors %}
+                                            <div class="text-danger small">{{ form.patient_age.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.patient_dob.id_for_label }}" class="form-label">
+                                            <i class="fas fa-calendar"></i> Date of Birth
+                                        </label>
+                                        {{ form.patient_dob }}
+                                        {% if form.patient_dob.errors %}
+                                            <div class="text-danger small">{{ form.patient_dob.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.patient_phone.id_for_label }}" class="form-label">
+                                            <i class="fas fa-phone"></i> Phone Number
+                                        </label>
+                                        {{ form.patient_phone }}
+                                        {% if form.patient_phone.errors %}
+                                            <div class="text-danger small">{{ form.patient_phone.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.patient_gender.id_for_label }}" class="form-label">
+                                            <i class="fas fa-venus-mars"></i> Gender
+                                        </label>
+                                        {{ form.patient_gender }}
+                                        {% if form.patient_gender.errors %}
+                                            <div class="text-danger small">{{ form.patient_gender.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- File Upload Section -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-3"><i class="fas fa-video feature-icon"></i>Echocardiogram Video</h5>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-upload"></i> Upload Echo Video
+                                        </label>
+                                        <div class="file-upload-wrapper">
+                                            {{ form.echo_file }}
+                                            <label for="{{ form.echo_file.id_for_label }}" class="file-upload-display">
+                                                <div id="upload-content">
+                                                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                                    <h6>Click to Select Echo Video</h6>
+                                                    <p class="text-muted mb-0">
+                                                        Supported formats: MP4, AVI, MOV, WMV<br>
+                                                        Maximum size: 500MB
+                                                    </p>
+                                                </div>
+                                                <div id="file-selected" style="display: none;">
+                                                    <i class="fas fa-video fa-3x text-success mb-3"></i>
+                                                    <h6 class="text-success">Video Selected</h6>
+                                                    <p id="file-name" class="text-muted mb-0"></p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        {% if form.echo_file.errors %}
+                                            <div class="text-danger small mt-2">{{ form.echo_file.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Analysis Features -->
+                                    <div class="analysis-features">
+                                        <h6><i class="fas fa-cogs"></i> Analysis Features:</h6>
+                                        <ul class="list-unstyled">
+                                            <li><i class="fas fa-check text-success"></i> Frame extraction & processing</li>
+                                            <li><i class="fas fa-check text-success"></i> Left ventricle segmentation</li>
+                                            <li><i class="fas fa-check text-success"></i> Ejection fraction calculation</li>
+                                            <li><i class="fas fa-check text-success"></i> Wall motion analysis</li>
+                                            <li><i class="fas fa-check text-success"></i> Chamber dimension assessment</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg me-3" id="analyzeBtn">
+                                    <i class="fas fa-play-circle"></i> Start Echo Analysis
+                                </button>
+                                <a href="{% url 'echo_files_list' %}" class="btn btn-secondary btn-lg">
+                                    <i class="fas fa-list"></i> View Echo Files
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Information Cards -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-heart-pulse fa-3x feature-icon"></i>
+                                <h5>AI-Powered Analysis</h5>
+                                <p class="text-muted">Advanced computer vision algorithms for accurate cardiac assessment</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-chart-area fa-3x feature-icon"></i>
+                                <h5>Detailed Metrics</h5>
+                                <p class="text-muted">Comprehensive analysis including EF, volumes, and wall motion</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <i class="fas fa-shield-alt fa-3x feature-icon"></i>
+                                <h5>Medical Grade</h5>
+                                <p class="text-muted">Clinical-quality analysis for professional healthcare use</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('{{ form.echo_file.id_for_label }}');
+            const uploadContent = document.getElementById('upload-content');
+            const fileSelected = document.getElementById('file-selected');
+            const fileName = document.getElementById('file-name');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const form = document.getElementById('echoForm');
+
+            // File input change handler
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    fileName.textContent = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
+                    uploadContent.style.display = 'none';
+                    fileSelected.style.display = 'block';
+                } else {
+                    uploadContent.style.display = 'block';
+                    fileSelected.style.display = 'none';
+                }
+            });
+
+            // Form submit handler with loading state
+            form.addEventListener('submit', function() {
+                analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Echo...';
+                analyzeBtn.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -638,8 +638,14 @@
             <div class="upload-section" style="padding: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                     <div>
-                        <a href="{% url 'home' %}" class="upload-btn" style="text-decoration: none;">
-                            <i class="fas fa-plus"></i> Upload New ECG
+                        <a href="{% url 'home' %}" class="upload-btn" style="text-decoration: none; margin-right: 10px;">
+                            <i class="fas fa-chart-line"></i> ECG Analysis
+                        </a>
+                        <a href="{% url 'upload_echo' %}" class="upload-btn" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); text-decoration: none; margin-right: 10px;">
+                            <i class="fas fa-heart"></i> Echo Analysis
+                        </a>
+                        <a href="{% url 'echo_files_list' %}" class="upload-btn" style="background: linear-gradient(135deg, #74b9ff, #0984e3); text-decoration: none;">
+                            <i class="fas fa-video"></i> Echo Files
                         </a>
                     </div>
                     <div style="display: flex; align-items: center; gap: 15px;">
