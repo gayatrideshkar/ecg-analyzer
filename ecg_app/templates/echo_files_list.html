@@ -1,481 +1,588 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Files - Cardiac Diagnostics</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Echo Files - Medical Imaging System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        .gradient-bg {
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #ee5a24;
+            --accent-color: #74b9ff;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+            --danger-color: #e17055;
+            --dark-color: #2d3436;
+            --text-dark: #2d3436;
+            --text-light: #636e72;
+            --background: #f8f9fa;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px 0;
         }
-        
-        .card {
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            border: none;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
-        
-        .card-header {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: white;
-            border-radius: 20px 20px 0 0 !important;
-            padding: 2rem;
+
+        .header-section {
             text-align: center;
-            border: none;
+            margin-bottom: 30px;
+            color: white;
         }
-        
-        .navbar-brand {
+
+        .header-section h1 {
+            font-size: 2.5rem;
             font-weight: 700;
-            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        
-        .table-container {
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .navigation-bar {
             background: white;
             border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
         }
-        
-        .table {
-            margin-bottom: 0;
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
-        
-        .table th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .nav-left {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, var(--accent-color), #0984e3);
             color: white;
-            font-weight: 600;
-            border: none;
-            padding: 1rem;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
         }
-        
-        .table td {
-            padding: 1rem;
-            vertical-align: middle;
-            border-bottom: 1px solid #e9ecef;
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
         }
-        
-        .table tbody tr:hover {
-            background-color: rgba(102, 126, 234, 0.1);
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 8px 20px;
-            font-weight: 600;
+
+        .user-info {
+            color: var(--text-dark);
+            font-weight: 500;
         }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 8px 20px;
-        }
-        
-        .btn-info {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 8px 20px;
-        }
-        
-        .search-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .form-control {
-            border-radius: 15px;
-            padding: 12px 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.9);
-        }
-        
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .badge-success { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); }
-        .badge-warning { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
-        .badge-danger { background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); }
-        .badge-info { background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); }
-        
-        .navigation-tabs {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .nav-link {
-            border-radius: 10px;
-            margin: 0 5px;
+
+        .logout-btn {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
         }
-        
-        .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-        }
-        
-        .nav-link:not(.active) {
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .nav-link:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-        
-        .empty-state {
+            padding: 30px;
             text-align: center;
-            padding: 4rem 2rem;
-            color: #6c757d;
         }
-        
-        .file-icon {
-            color: #667eea;
-            margin-right: 0.5rem;
+
+        .card-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
-        
-        .pagination {
-            justify-content: center;
+
+        .search-section {
+            padding: 30px;
+            background: #f8f9fa;
         }
-        
-        .page-link {
-            color: #667eea;
-            border-color: #dee2e6;
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
             border-radius: 10px;
-            margin: 0 2px;
+            font-size: 1rem;
+            min-width: 250px;
         }
-        
-        .page-link:hover {
-            color: #764ba2;
-            background-color: #e9ecef;
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
         }
-        
-        .page-item.active .page-link {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-color: #667eea;
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .files-section {
+            padding: 30px;
+        }
+
+        .stats-bar {
+            background: #e8f4fd;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .files-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .file-card {
+            background: white;
+            border: 2px solid #f1f3f4;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .patient-info h3 {
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            font-size: 1.3rem;
+        }
+
+        .patient-details {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, var(--accent-color), #0984e3);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+            color: white;
+        }
+
+        .analysis-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .summary-item .label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .summary-item .value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .ef-normal { color: var(--success-color); }
+        .ef-borderline { color: var(--warning-color); }
+        .ef-reduced { color: var(--danger-color); }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .pagination {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .pagination a, .pagination span {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--text-dark);
+            border: 2px solid #dee2e6;
+        }
+
+        .pagination a:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .pagination .current {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .no-files {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .no-files i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-left {
+                justify-content: center;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .file-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .patient-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .analysis-summary {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
         }
     </style>
 </head>
-<body class="gradient-bg">
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0,0,0,0.1);">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-heartbeat"></i> CardiacAI Pro
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    <i class="fas fa-user-circle"></i> Welcome, {{ user.first_name }}
-                </span>
-                <a class="btn btn-outline-light btn-sm" href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1><i class="fas fa-video"></i> Echo Files Management</h1>
+            <p>Manage and review 2D echocardiogram analysis results</p>
         </div>
-    </nav>
 
-    <div class="container mt-4">
-        <!-- Navigation Tabs -->
-        <div class="navigation-tabs">
-            <ul class="nav nav-pills justify-content-center">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'upload_ecg' %}">
+        <!-- Navigation Bar -->
+        <div class="navigation-bar">
+            <div class="nav-buttons">
+                <div class="nav-left">
+                    <a href="{% url 'home' %}" class="nav-btn">
                         <i class="fas fa-chart-line"></i> ECG Analysis
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'upload_echo' %}">
+                    <a href="{% url 'upload_echo' %}" class="nav-btn">
                         <i class="fas fa-heart"></i> Echo Analysis
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'uploaded_files' %}">
+                    <a href="{% url 'uploaded_files' %}" class="nav-btn">
                         <i class="fas fa-folder"></i> ECG Files
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active">
+                    <a href="{% url 'echo_files_list' %}" class="nav-btn active">
                         <i class="fas fa-video"></i> Echo Files
                     </a>
-                </li>
-            </ul>
+                </div>
+                <div class="nav-right">
+                    <span class="user-info">
+                        <i class="fas fa-user"></i> Welcome, {{ user.first_name|default:user.username }}!
+                    </span>
+                    <a href="{% url 'logout' %}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <!-- Header -->
-        <div class="card mb-4">
+        <!-- Main Content -->
+        <div class="main-card">
             <div class="card-header">
-                <h2><i class="fas fa-video me-2"></i>Echocardiogram Files</h2>
-                <p class="mb-0">Manage and review your uploaded echo studies</p>
+                <h2><i class="fas fa-video"></i> Echo Analysis Files</h2>
+                <p>Browse and manage 2D echocardiogram analysis results</p>
             </div>
-        </div>
 
-        <!-- Search and Actions -->
-        <div class="search-container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <form method="get" class="d-flex">
-                        <input type="text" name="search" class="form-control me-2" 
-                               placeholder="Search by patient name..." 
-                               value="{{ search_query }}"
-                               aria-label="Search echo files">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i> Search
-                        </button>
-                    </form>
-                </div>
-                <div class="col-md-6 text-end">
-                    <a href="{% url 'upload_echo' %}" class="btn btn-primary btn-lg">
-                        <i class="fas fa-plus"></i> Upload New Echo
+            <!-- Search Section -->
+            <div class="search-section">
+                <form method="GET" class="search-form">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search_query }}" 
+                           placeholder="Search by patient name, phone, or view classification..."
+                           class="search-input">
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    {% if search_query %}
+                    <a href="{% url 'echo_files_list' %}" class="search-btn" style="background: var(--text-light);">
+                        <i class="fas fa-times"></i> Clear
                     </a>
-                </div>
+                    {% endif %}
+                </form>
             </div>
-            
-            {% if search_query %}
-            <div class="mt-3">
-                <span class="text-white">
-                    <i class="fas fa-search"></i> Showing results for: <strong>"{{ search_query }}"</strong>
-                    <a href="{% url 'echo_files_list' %}" class="text-white ms-2">
-                        <i class="fas fa-times"></i> Clear search
-                    </a>
-                </span>
-            </div>
-            {% endif %}
-        </div>
 
-        <!-- Display Messages -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <!-- Files Section -->
+            <div class="files-section">
+                <div class="stats-bar">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>{{ total_files }}</strong> total echo files
+                    {% if search_query %}
+                        | <strong>{{ echo_files|length }}</strong> matching "{{ search_query }}"
+                    {% endif %}
                 </div>
-            {% endfor %}
-        {% endif %}
 
-        <!-- Files Table -->
-        {% if page_obj %}
-            <div class="table-container">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag"></i> ID</th>
-                            <th><i class="fas fa-user"></i> Patient Name</th>
-                            <th><i class="fas fa-birthday-cake"></i> Age/Gender</th>
-                            <th><i class="fas fa-calendar"></i> Upload Date</th>
-                            <th><i class="fas fa-chart-pie"></i> EF (%)</th>
-                            <th><i class="fas fa-heart-pulse"></i> LV Function</th>
-                            <th><i class="fas fa-file-video"></i> File Size</th>
-                            <th><i class="fas fa-cogs"></i> Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for echo_file in page_obj %}
-                        <tr>
-                            <td>
-                                <span class="fw-bold text-primary">#{{ echo_file.id }}</span>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-video file-icon"></i>
-                                    <div>
-                                        <div class="fw-bold">{{ echo_file.patient_name }}</div>
-                                        <small class="text-muted">{{ echo_file.file_name|truncatechars:30 }}</small>
-                                    </div>
+                {% if echo_files %}
+                <div class="files-grid">
+                    {% for echo_file in echo_files %}
+                    <div class="file-card">
+                        <div class="file-header">
+                            <div class="patient-info">
+                                <h3>{{ echo_file.patient_name }}</h3>
+                                <div class="patient-details">
+                                    <span><i class="fas fa-user"></i> {{ echo_file.patient_age }}y, {{ echo_file.patient_gender }}</span>
+                                    <span><i class="fas fa-phone"></i> {{ echo_file.patient_phone }}</span>
+                                    <span><i class="fas fa-calendar"></i> {{ echo_file.uploaded_at|date:"M d, Y H:i" }}</span>
+                                    <span><i class="fas fa-file"></i> {{ echo_file.get_file_size_display }}</span>
                                 </div>
-                            </td>
-                            <td>
-                                <div>{{ echo_file.patient_age }} years</div>
-                                <small class="text-muted">{{ echo_file.patient_gender }}</small>
-                            </td>
-                            <td>
-                                <div>{{ echo_file.uploaded_at|date:"M d, Y" }}</div>
-                                <small class="text-muted">{{ echo_file.uploaded_at|time:"H:i" }}</small>
-                            </td>
-                            <td>
-                                {% if echo_file.ejection_fraction %}
-                                    <span class="badge {% if echo_file.ejection_fraction >= 55 %}badge-success{% elif echo_file.ejection_fraction >= 45 %}badge-warning{% else %}badge-danger{% endif %}">
+                            </div>
+                            <div class="file-actions">
+                                <a href="{% url 'echo_results' echo_file.id %}" class="action-btn btn-view">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <button onclick="deleteEcho({{ echo_file.id }}, '{{ echo_file.patient_name }}')" 
+                                        class="action-btn btn-delete">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="analysis-summary">
+                            <div class="summary-item">
+                                <div class="label">Status</div>
+                                <div class="value">
+                                    <span class="status-badge status-{{ echo_file.processing_status }}">
+                                        {{ echo_file.get_processing_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">View</div>
+                                <div class="value">{{ echo_file.view_classification|default:"Pending" }}</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">Ejection Fraction</div>
+                                <div class="value {% if echo_file.ejection_fraction %}{% if echo_file.ejection_fraction >= 50 %}ef-normal{% elif echo_file.ejection_fraction >= 40 %}ef-borderline{% else %}ef-reduced{% endif %}{% endif %}">
+                                    {% if echo_file.ejection_fraction %}
                                         {{ echo_file.ejection_fraction }}%
-                                    </span>
-                                {% else %}
-                                    <span class="text-muted">--</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if echo_file.lv_function %}
-                                    <span class="badge {% if echo_file.lv_function == 'Normal' %}badge-success{% elif 'Mild' in echo_file.lv_function %}badge-warning{% else %}badge-danger{% endif %}">
-                                        {{ echo_file.lv_function }}
-                                    </span>
-                                {% else %}
-                                    <span class="text-muted">Not analyzed</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span class="badge badge-info">{{ echo_file.get_file_size_display }}</span>
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    {% if echo_file.analysis_results %}
-                                        <a href="{% url 'echo_results' echo_file.id %}" 
-                                           class="btn btn-primary btn-sm" title="View Results">
-                                            <i class="fas fa-chart-bar"></i>
-                                        </a>
                                     {% else %}
-                                        <button class="btn btn-secondary btn-sm" disabled title="Not analyzed">
-                                            <i class="fas fa-hourglass-half"></i>
-                                        </button>
+                                        Pending
                                     {% endif %}
-                                    
-                                    <button class="btn btn-danger btn-sm" 
-                                            onclick="confirmDelete({{ echo_file.id }}, '{{ echo_file.patient_name }}')"
-                                            title="Delete File">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
                                 </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-            <nav aria-label="Echo files pagination" class="mt-4">
-                <ul class="pagination">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">
-                                <i class="fas fa-angle-double-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                                <i class="fas fa-angle-left"></i>
-                            </a>
-                        </li>
-                    {% endif %}
-                    
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ num }}</span>
-                            </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
-                            </li>
-                        {% endif %}
+                            </div>
+                            <div class="summary-item">
+                                <div class="label">LV Function</div>
+                                <div class="value">{{ echo_file.ef_classification|default:"Pending" }}</div>
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
-                    
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                                <i class="fas fa-angle-right"></i>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">
-                                <i class="fas fa-angle-double-right"></i>
-                            </a>
-                        </li>
+                </div>
+
+                <!-- Pagination -->
+                {% if echo_files.has_other_pages %}
+                <div class="pagination">
+                    {% if echo_files.has_previous %}
+                        <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; First</a>
+                        <a href="?page={{ echo_files.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
                     {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
 
-            <!-- Summary Info -->
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5><i class="fas fa-file-video text-primary"></i> Total Echo Files</h5>
-                            <h2 class="text-primary">{{ total_files }}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            <h5><i class="fas fa-chart-line text-success"></i> Analyzed Studies</h5>
-                            <h2 class="text-success">
-                                {{ page_obj.object_list|length }}
-                                {% if page_obj.object_list %}
-                                    <small class="text-muted">({{ page_obj.object_list|length }}/{{ total_files }})</small>
-                                {% endif %}
-                            </h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <span class="current">
+                        Page {{ echo_files.number }} of {{ echo_files.paginator.num_pages }}
+                    </span>
 
-        {% else %}
-            <div class="card">
-                <div class="card-body">
-                    <div class="empty-state">
+                    {% if echo_files.has_next %}
+                        <a href="?page={{ echo_files.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                        <a href="?page={{ echo_files.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last &raquo;</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="no-files">
+                    <i class="fas fa-video"></i>
+                    <h3>No echo files found</h3>
+                    <p>
                         {% if search_query %}
-                            <i class="fas fa-search fa-4x mb-3"></i>
-                            <h4>No echo files found</h4>
-                            <p>No echo files match your search criteria: "<strong>{{ search_query }}</strong>"</p>
-                            <a href="{% url 'echo_files_list' %}" class="btn btn-primary">Clear search</a>
+                            No files match your search criteria. <a href="{% url 'echo_files_list' %}">Show all files</a>
                         {% else %}
-                            <i class="fas fa-video fa-4x mb-3"></i>
-                            <h4>No echo files uploaded</h4>
-                            <p>Upload your first echocardiogram video to get started with cardiac analysis.</p>
-                            <a href="{% url 'upload_echo' %}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus"></i> Upload First Echo
-                            </a>
+                            Upload your first echo video to get started!
                         {% endif %}
-                    </div>
+                    </p>
+                    <a href="{% url 'upload_echo' %}" class="nav-btn" style="margin-top: 20px;">
+                        <i class="fas fa-plus"></i> Upload Echo
+                    </a>
                 </div>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Deletion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete the echo file for <strong id="patientNameToDelete"></strong>?</p>
-                    <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="deleteForm" method="post" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Delete File
-                        </button>
-                    </form>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function confirmDelete(echoId, patientName) {
-            document.getElementById('patientNameToDelete').textContent = patientName;
-            document.getElementById('deleteForm').action = '/echo/delete/' + echoId + '/';
-            new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        function deleteEcho(echoId, patientName) {
+            if (confirm(`Are you sure you want to delete the echo file for ${patientName}? This action cannot be undone.`)) {
+                fetch(`/ajax/echo/delete/${echoId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting file: ' + error);
+                });
+            }
         }
     </script>
 </body>

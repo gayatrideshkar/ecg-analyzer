@@ -1,44 +1,47 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from .models import ECGImage, EchoImage
+from datetime import date
 
 
 class SignUpForm(UserCreationForm):
+    """Custom signup form with additional fields"""
     first_name = forms.CharField(
         max_length=30,
-        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter your first name'
+            'placeholder': 'Enter your first name',
+            'required': True
         })
     )
     last_name = forms.CharField(
         max_length=30,
-        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter your last name'
+            'placeholder': 'Enter your last name',
+            'required': True
         })
     )
     email = forms.EmailField(
-        required=True,
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter your email address'
+            'placeholder': 'Enter your email address',
+            'required': True
         })
     )
     password1 = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Create a password'
+            'placeholder': 'Enter your password',
+            'required': True
         })
     )
     password2 = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Confirm your password'
+            'placeholder': 'Confirm your password',
+            'required': True
         })
     )
 
@@ -48,147 +51,45 @@ class SignUpForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise ValidationError("An account with this email already exists.")
+        if User.objects.filter(username=email).exists():
+            raise forms.ValidationError('This email address is already registered.')
         return email
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
         user.username = self.cleaned_data['email']  # Use email as username
+        user.email = self.cleaned_data['email']
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
         if commit:
             user.save()
         return user
 
 
 class LoginForm(forms.Form):
+    """Custom login form"""
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your email address',
-            'autocomplete': 'new-email'
+            'required': True
         })
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your password',
-            'autocomplete': 'new-password'
+            'required': True
         })
     )
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not email:
-            raise forms.ValidationError('Please enter your email address.')
-        return email
-    
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        if not password:
-            raise forms.ValidationError('Please enter your password.')
-        if len(password) < 3:
-            raise forms.ValidationError('Password is too short.')
-        return password
+
 
 class ECGImageForm(forms.ModelForm):
+    """Form for uploading ECG images with patient information"""
+    
     class Meta:
         model = ECGImage
-        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_gender', 'patient_phone', 'image']
-        widgets = {
-            'patient_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter patient\'s full name',
-                'required': True
-            }),
-            'patient_age': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter age in years',
-                'min': 1,
-                'max': 150,
-                'required': True
-            }),
-            'patient_dob': forms.DateInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Select date of birth',
-                'type': 'date',
-                'required': True
-            }),
-            'patient_gender': forms.Select(attrs={
-                'class': 'form-control',
-                'required': True
-            }),
-            'patient_phone': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter phone number (e.g., +1-234-567-8900)',
-                'pattern': r'[+]?[0-9\-\s\(\)]{10,20}',
-                'required': True
-            }),
-            'image': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*,.pdf',
-                'required': True
-            })
-        }
-        labels = {
-            'patient_name': 'Full Name',
-            'patient_age': 'Age',
-            'patient_dob': 'Date of Birth',
-            'patient_gender': 'Gender',
-            'patient_phone': 'Phone Number',
-            'image': 'ECG Image File'
-        }
-    
-    def clean_patient_age(self):
-        age = self.cleaned_data.get('patient_age')
-        if age is None:
-            raise forms.ValidationError('Please enter the patient\'s age.')
-        if age < 1 or age > 150:
-            raise forms.ValidationError('Please enter a valid age between 1 and 150 years.')
-        return age
-    
-    def clean_patient_phone(self):
-        phone = self.cleaned_data.get('patient_phone')
-        if not phone:
-            raise forms.ValidationError('Please enter the patient\'s phone number.')
-        
-        # Remove spaces, dashes, and parentheses for validation
-        cleaned_phone = ''.join(char for char in phone if char.isdigit() or char == '+')
-        if len(cleaned_phone) < 10:
-            raise forms.ValidationError('Please enter a valid phone number with at least 10 digits.')
-        return phone
-    
-    def clean_patient_name(self):
-        name = self.cleaned_data.get('patient_name')
-        if not name or not name.strip():
-            raise forms.ValidationError('Please enter the patient\'s full name.')
-        return name.strip()
-    
-    def clean_patient_dob(self):
-        from datetime import date
-        dob = self.cleaned_data.get('patient_dob')
-        if not dob:
-            raise forms.ValidationError('Please enter the patient\'s date of birth.')
-        
-        # Check if date is not in the future
-        if dob > date.today():
-            raise forms.ValidationError('Date of birth cannot be in the future.')
-        
-        # Check if date is reasonable (not more than 150 years ago)
-        from datetime import timedelta
-        max_age_date = date.today() - timedelta(days=150*365)
-        if dob < max_age_date:
-            raise forms.ValidationError('Please enter a valid date of birth.')
-        
-        return dob
-
-
-class EchoUploadForm(forms.ModelForm):
-    """Form for uploading 2D Echocardiogram videos"""
-    
-    class Meta:
-        model = EchoImage
-        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_phone', 'patient_gender', 'echo_file']
+        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_phone', 'patient_gender', 'image']
         widgets = {
             'patient_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -208,63 +109,54 @@ class EchoUploadForm(forms.ModelForm):
                 'required': True
             }),
             'patient_phone': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter phone number (e.g., +1-234-567-8901)',
-                'required': True
+                'class': 'form-control phone-input',
+                'placeholder': 'Enter Phone number',
+                'maxlength': '10',
+                'pattern': '[0-9]{10}',
+                'inputmode': 'numeric',
+                'autocomplete': 'tel',
+                'required': True,
+                'oninput': 'this.value = this.value.replace(/[^0-9]/g, "")'
             }),
             'patient_gender': forms.Select(attrs={
                 'class': 'form-control',
                 'required': True
             }),
-            'echo_file': forms.FileInput(attrs={
+            'image': forms.FileInput(attrs={
                 'class': 'form-control',
-                'accept': 'video/*,.avi,.mp4,.mov,.wmv,.flv,.webm',
+                'accept': 'image/*',
                 'required': True
             })
         }
     
-    def clean_echo_file(self):
-        echo_file = self.cleaned_data.get('echo_file')
-        if not echo_file:
-            raise forms.ValidationError('Please select an echocardiogram video file.')
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if not image:
+            raise forms.ValidationError('Please select an ECG image file.')
         
-        # Check file extension
-        allowed_extensions = ['.avi', '.mp4', '.mov', '.wmv', '.flv', '.webm', '.mkv']
-        file_extension = echo_file.name.lower().split('.')[-1]
-        if f'.{file_extension}' not in allowed_extensions:
-            raise forms.ValidationError(
-                f'Please upload a valid video file. Supported formats: {", ".join(allowed_extensions)}'
-            )
+        # Check file size (limit to 10MB)
+        if image.size > 10 * 1024 * 1024:
+            raise forms.ValidationError('Image file size must be less than 10MB.')
         
-        # Check file size (limit to 500MB)
-        max_size = 500 * 1024 * 1024  # 500MB in bytes
-        if echo_file.size > max_size:
-            raise forms.ValidationError(
-                f'File size too large. Please upload a file smaller than 500MB. '
-                f'Current size: {echo_file.size / (1024*1024):.1f}MB'
-            )
+        # Check if it's a valid image format
+        valid_formats = ['jpeg', 'jpg', 'png', 'bmp', 'tiff', 'gif']
+        file_extension = image.name.split('.')[-1].lower()
+        if file_extension not in valid_formats:
+            raise forms.ValidationError(f'Please upload a valid image file. Supported formats: {", ".join(valid_formats)}')
         
-        return echo_file
+        return image
     
     def clean_patient_phone(self):
         phone = self.cleaned_data.get('patient_phone')
-        if not phone:
-            raise forms.ValidationError('Please enter a phone number.')
+        # Remove any non-digit characters
+        phone_digits = ''.join(filter(str.isdigit, phone))
         
-        # Remove spaces, dashes, and parentheses for validation
-        cleaned_phone = ''.join(char for char in phone if char.isdigit() or char == '+')
-        if len(cleaned_phone) < 10:
-            raise forms.ValidationError('Please enter a valid phone number with at least 10 digits.')
-        return phone
-    
-    def clean_patient_name(self):
-        name = self.cleaned_data.get('patient_name')
-        if not name or not name.strip():
-            raise forms.ValidationError('Please enter the patient\'s full name.')
-        return name.strip()
+        if len(phone_digits) != 10:
+            raise forms.ValidationError('Please enter a valid 10-digit phone number.')
+        
+        return phone_digits
     
     def clean_patient_dob(self):
-        from datetime import date
         dob = self.cleaned_data.get('patient_dob')
         if not dob:
             raise forms.ValidationError('Please enter the patient\'s date of birth.')
@@ -280,3 +172,141 @@ class EchoUploadForm(forms.ModelForm):
             raise forms.ValidationError('Please enter a valid date of birth.')
         
         return dob
+    
+    def save(self, commit=True):
+        """Custom save method to set file metadata"""
+        instance = super().save(commit=False)
+        
+        # Set file metadata if image is provided
+        if instance.image:
+            instance.file_name = instance.image.name
+            instance.file_size = instance.image.size
+        
+        if commit:
+            instance.save()
+        return instance
+
+
+class EchoUploadForm(forms.ModelForm):
+    """Form for uploading and analyzing 2D Echocardiogram videos with patient information"""
+    
+    patient_name = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter patient full name',
+            'required': True
+        }),
+        help_text="Patient's full name"
+    )
+    
+    patient_age = forms.IntegerField(
+        min_value=0,
+        max_value=150,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter patient age',
+            'required': True,
+            'min': 0,
+            'max': 150
+        }),
+        help_text="Patient's age in years"
+    )
+    
+    patient_dob = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',
+            'required': True
+        }),
+        help_text="Patient's date of birth"
+    )
+    
+    patient_gender = forms.ChoiceField(
+        choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')],
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'required': True
+        }),
+        help_text="Patient's gender"
+    )
+    
+    patient_phone = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'XXXXXXXXXX',
+            'pattern': '[0-9]{10}',
+            'title': 'Please enter a 10-digit phone number',
+            'required': True
+        }),
+        help_text="Patient's 10-digit phone number"
+    )
+    
+    echo_file = forms.FileField(
+        widget=forms.FileInput(attrs={
+            'class': 'file-input',
+            'accept': '.mp4,.avi,.dcm,.dicom',
+            'required': True
+        }),
+        help_text="Upload echo video file (MP4, AVI, DICOM)"
+    )
+    
+    class Meta:
+        model = EchoImage
+        fields = ['patient_name', 'patient_age', 'patient_dob', 'patient_gender', 'patient_phone', 'echo_file']
+    
+    def clean_patient_phone(self):
+        phone = self.cleaned_data.get('patient_phone')
+        # Remove any non-digit characters
+        phone_digits = ''.join(filter(str.isdigit, phone))
+        
+        if len(phone_digits) != 10:
+            raise forms.ValidationError('Please enter a valid 10-digit phone number.')
+        
+        return phone_digits
+    
+    def clean_patient_dob(self):
+        dob = self.cleaned_data.get('patient_dob')
+        if not dob:
+            raise forms.ValidationError('Please enter the patient\'s date of birth.')
+        
+        # Check if date is not in the future
+        if dob > date.today():
+            raise forms.ValidationError('Date of birth cannot be in the future.')
+        
+        # Check if date is reasonable (not more than 150 years ago)
+        from datetime import timedelta
+        max_age_date = date.today() - timedelta(days=150*365)
+        if dob < max_age_date:
+            raise forms.ValidationError('Please enter a valid date of birth.')
+        
+        return dob
+    
+    def clean_echo_file(self):
+        echo_file = self.cleaned_data.get('echo_file')
+        if echo_file:
+            # Check file size (limit to 500MB)
+            if echo_file.size > 500 * 1024 * 1024:
+                raise forms.ValidationError('File size should be less than 500MB.')
+            
+            # Check file extension
+            file_name = echo_file.name.lower()
+            allowed_extensions = ['.mp4', '.avi', '.dcm', '.dicom']
+            if not any(file_name.endswith(ext) for ext in allowed_extensions):
+                raise forms.ValidationError('Please upload a valid echo video file (MP4, AVI, or DICOM).')
+        
+        return echo_file
+    
+    def save(self, commit=True):
+        """Custom save method to set file metadata"""
+        instance = super().save(commit=False)
+        
+        # Set file metadata if echo file is provided
+        if instance.echo_file:
+            instance.file_name = instance.echo_file.name
+            instance.file_size = instance.echo_file.size
+        
+        if commit:
+            instance.save()
+        return instance

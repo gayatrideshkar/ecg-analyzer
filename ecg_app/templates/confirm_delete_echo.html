@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Delete - {{ echo_image.patient_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #ee5a24;
+            --danger-color: #e17055;
+            --text-dark: #2d3436;
+            --text-light: #636e72;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .confirm-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            max-width: 500px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .confirm-header {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .confirm-header i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .confirm-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .confirm-content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .patient-info {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .patient-info h3 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .patient-detail {
+            color: var(--text-light);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .warning-text {
+            color: var(--danger-color);
+            font-weight: 600;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(225, 112, 85, 0.4);
+        }
+
+        @media (max-width: 480px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="confirm-card">
+        <div class="confirm-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h2>Confirm Deletion</h2>
+            <p>This action cannot be undone</p>
+        </div>
+
+        <div class="confirm-content">
+            <div class="patient-info">
+                <h3><i class="fas fa-user"></i> {{ echo_image.patient_name }}</h3>
+                <div class="patient-detail">
+                    <i class="fas fa-calendar"></i>
+                    <span>Age: {{ echo_image.patient_age }}, {{ echo_image.patient_gender }}</span>
+                </div>
+                <div class="patient-detail">
+                    <i class="fas fa-phone"></i>
+                    <span>{{ echo_image.patient_phone }}</span>
+                </div>
+                <div class="patient-detail">
+                    <i class="fas fa-clock"></i>
+                    <span>Uploaded: {{ echo_image.uploaded_at|date:"M d, Y H:i" }}</span>
+                </div>
+                {% if echo_image.ejection_fraction %}
+                <div class="patient-detail">
+                    <i class="fas fa-heart"></i>
+                    <span>EF: {{ echo_image.ejection_fraction }}%</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <p class="warning-text">
+                <i class="fas fa-warning"></i>
+                Are you sure you want to delete this echo analysis?<br>
+                All analysis data and the uploaded video file will be permanently removed.
+            </p>
+
+            <div class="action-buttons">
+                <a href="{% url 'echo_files_list' %}" class="btn btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-delete">
+                        <i class="fas fa-trash"></i> Yes, Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -18,9 +18,10 @@ urlpatterns = [
     path('delete/<int:file_id>/', views.delete_file, name='delete_file'),
     path('ajax/delete/<int:file_id>/', views.delete_file_ajax, name='delete_file_ajax'),
     
-    # Echo Analysis URLs
-    path('echo/upload/', views.upload_echo, name='upload_echo'),
-    path('echo/results/<int:echo_id>/', views.echo_results, name='echo_results'),
+    # 2D Echo Analysis URLs
+    path('echo/', views.upload_echo, name='upload_echo'),
     path('echo/files/', views.echo_files_list, name='echo_files_list'),
+    path('echo/results/<int:echo_id>/', views.echo_results, name='echo_results'),
     path('echo/delete/<int:echo_id>/', views.delete_echo, name='delete_echo'),
+    path('ajax/echo/delete/<int:echo_id>/', views.delete_echo_ajax, name='delete_echo_ajax'),
 ]

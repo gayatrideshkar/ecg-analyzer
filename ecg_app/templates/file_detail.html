@@ -289,13 +289,6 @@
                     <div class="summary-grid">
                         <div class="summary-card">
                             <div class="summary-value">
-                                {{ result.image_quality.quality }}
-                            </div>
-                            <div class="summary-label">Image Quality</div>
-                        </div>
-                        
-                        <div class="summary-card">
-                            <div class="summary-value">
                                 {% if result.heart_rate.bpm != "Unable to determine" %}
                                     {{ result.heart_rate.bpm }} BPM
                                 {% else %}
@@ -332,18 +325,6 @@
                     <div class="results-content">
                         <!-- Quick Overview -->
                         <div class="analysis-grid">
-                            <!-- Image Quality -->
-                            <div class="analysis-item">
-                                <h4><i class="fas fa-image"></i> Image Quality</h4>
-                                <div class="analysis-value">
-                                    {{ result.image_quality.quality }}
-                                    <span class="status-badge badge-{% if result.image_quality.score > 80 %}success{% elif result.image_quality.score > 60 %}warning{% else %}info{% endif %}">
-                                        {{ result.image_quality.score }}%
-                                    </span>
-                                </div>
-                                <div class="analysis-detail">{{ result.image_quality.details }}</div>
-                            </div>
-
                             <!-- Heart Rate -->
                             <div class="analysis-item">
                                 <h4><i class="fas fa-heartbeat"></i> Heart Rate</h4>
@@ -373,13 +354,13 @@
                             </div>
 
                             <!-- Technical Details -->
-                            <div class="analysis-item">
+                            {% comment %} <div class="analysis-item">
                                 <h4><i class="fas fa-cogs"></i> Technical Details</h4>
                                 <div class="analysis-value">{{ result.technical_details.signal_clarity }}</div>
                                 <div class="analysis-detail">
                                     Dimensions: {{ result.technical_details.image_dimensions }}<br>
                                     Detected Features: {{ result.technical_details.detected_waves }}
-                                </div>
+                                </div> {% endcomment %}
                             </div>
                         </div>
 

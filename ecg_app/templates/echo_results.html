@@ -1,522 +1,634 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Echo Analysis Results - {{ echo_image.patient_name }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        .gradient-bg {
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #ee5a24;
+            --accent-color: #74b9ff;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+            --danger-color: #e17055;
+            --dark-color: #2d3436;
+            --text-dark: #2d3436;
+            --text-light: #636e72;
+            --background: #f8f9fa;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px 0;
         }
-        
-        .card {
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            border: none;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
         }
-        
-        .result-header {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: white;
-            border-radius: 20px 20px 0 0 !important;
-            padding: 2rem;
+
+        .header-section {
             text-align: center;
-        }
-        
-        .metric-card {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            margin-bottom: 30px;
             color: white;
-            border-radius: 15px;
-            padding: 1.5rem;
-            text-align: center;
-            margin-bottom: 1rem;
-            transition: transform 0.3s ease;
         }
-        
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        
-        .metric-label {
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-        
-        .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem;
-            border-radius: 15px 15px 0 0;
-            margin-bottom: 0;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 12px 30px;
-            font-weight: 600;
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 12px 30px;
-            font-weight: 600;
-        }
-        
-        .navbar-brand {
+
+        .header-section h1 {
+            font-size: 2.5rem;
             font-weight: 700;
-            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        
-        .badge-success { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); }
-        .badge-warning { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
-        .badge-danger { background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); }
-        .badge-info { background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); }
-        
-        .progress {
-            height: 20px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.2);
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            margin-bottom: 20px;
         }
-        
-        .progress-bar {
-            border-radius: 10px;
-        }
-        
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-        
-        .finding-item {
-            padding: 0.75rem 1rem;
-            background: rgba(116, 185, 255, 0.1);
-            border-left: 4px solid #74b9ff;
-            margin-bottom: 0.5rem;
-            border-radius: 0 10px 10px 0;
-        }
-        
-        .technical-detail {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 10px;
-            margin: 0.5rem 0;
-        }
-        
-        .ejection-fraction-gauge {
-            position: relative;
-            width: 200px;
-            height: 100px;
-            margin: 0 auto 2rem;
-        }
-        
-        .gauge-bg {
-            stroke: #e9ecef;
-            stroke-width: 20;
-        }
-        
-        .gauge-fill {
-            stroke-width: 20;
-            stroke-linecap: round;
-            transition: stroke-dasharray 1s ease-in-out;
-        }
-        
-        .navigation-tabs {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+
+        .navigation-bar {
+            background: white;
             border-radius: 15px;
-            padding: 1rem;
-            margin-bottom: 2rem;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
         }
-        
-        .nav-link {
-            border-radius: 10px;
-            margin: 0 5px;
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-left {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, var(--accent-color), #0984e3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+        }
+
+        .nav-btn.back {
+            background: linear-gradient(135deg, var(--text-light), #5a6268);
+        }
+
+        .user-info {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
         }
-        
-        .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-        }
-        
-        .nav-link:not(.active) {
+
+        .patient-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            background: rgba(255, 255, 255, 0.2);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .patient-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .patient-summary {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .patient-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.9;
+        }
+
+        .results-section {
+            padding: 40px 30px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .result-card h3 {
+            color: var(--text-dark);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .result-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ef-normal { color: var(--success-color); }
+        .ef-borderline { color: var(--warning-color); }
+        .ef-reduced { color: var(--danger-color); }
+
+        .detailed-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+
+        .detailed-section h3 {
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .detail-item .label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-item .value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .recommendations {
+            background: linear-gradient(135deg, #e8f8f5, #d1f2eb);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid var(--success-color);
+            margin-bottom: 25px;
+        }
+
+        .recommendations h3 {
+            color: var(--success-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            background: white;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendations li:before {
+            content: '\f058';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: var(--success-color);
+        }
+
+        .disclaimer {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 1px solid var(--warning-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .disclaimer h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .disclaimer p {
+            color: #856404;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--accent-color), #0984e3);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.4);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .action-btn.danger {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+        }
+
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-left {
+                justify-content: center;
+            }
+            
+            .patient-summary {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
-<body class="gradient-bg">
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0,0,0,0.1);">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-heartbeat"></i> CardiacAI Pro
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    <i class="fas fa-user-circle"></i> Welcome, {{ user.first_name }}
-                </span>
-                <a class="btn btn-outline-light btn-sm" href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <!-- Navigation Tabs -->
-        <div class="navigation-tabs">
-            <ul class="nav nav-pills justify-content-center">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'upload_ecg' %}">
-                        <i class="fas fa-chart-line"></i> ECG Analysis
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'upload_echo' %}">
-                        <i class="fas fa-heart"></i> Echo Analysis
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'uploaded_files' %}">
-                        <i class="fas fa-folder"></i> ECG Files
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active">
-                        <i class="fas fa-video"></i> Echo Results
-                    </a>
-                </li>
-            </ul>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1><i class="fas fa-chart-area"></i> Echo Analysis Results</h1>
+            <p>Detailed 2D echocardiogram analysis and cardiac function assessment</p>
         </div>
 
-        <!-- Patient Information Header -->
-        <div class="card mb-4">
-            <div class="result-header">
-                <h2><i class="fas fa-heart me-2"></i>2D Echocardiogram Analysis Results</h2>
-                <div class="row mt-3">
-                    <div class="col-md-3">
-                        <strong>Patient:</strong> {{ echo_image.patient_name }}
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Age:</strong> {{ echo_image.patient_age }} years ({{ echo_image.patient_gender }})
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Analysis Date:</strong> {{ echo_image.analyzed_at|date:"M d, Y" }}
-                    </div>
-                    <div class="col-md-3">
-                        <strong>File:</strong> {{ echo_image.file_name }}
-                    </div>
+        <!-- Navigation Bar -->
+        <div class="navigation-bar">
+            <div class="nav-buttons">
+                <div class="nav-left">
+                    <a href="{% url 'echo_files_list' %}" class="nav-btn back">
+                        <i class="fas fa-arrow-left"></i> Back to Echo Files
+                    </a>
+                    <a href="{% url 'upload_echo' %}" class="nav-btn">
+                        <i class="fas fa-plus"></i> New Analysis
+                    </a>
+                </div>
+                <div class="nav-right">
+                    <span class="user-info">
+                        <i class="fas fa-user"></i> Welcome, {{ user.first_name|default:user.username }}!
+                    </span>
+                    <a href="{% url 'logout' %}" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
 
-        {% if analysis_data %}
-            <!-- Key Metrics Section -->
-            <div class="row mb-4">
+        <!-- Patient Information -->
+        <div class="main-card">
+            <div class="patient-header">
+                <h2><i class="fas fa-user"></i> {{ echo_image.patient_name }}</h2>
+                <div class="patient-summary">
+                    <div class="patient-detail">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Age: {{ echo_image.patient_age }} years</span>
+                    </div>
+                    <div class="patient-detail">
+                        <i class="fas fa-venus-mars"></i>
+                        <span>Gender: {{ echo_image.patient_gender }}</span>
+                    </div>
+                    <div class="patient-detail">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ echo_image.patient_phone }}</span>
+                    </div>
+                    <div class="patient-detail">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ echo_image.uploaded_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <!-- Key Results -->
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3><i class="fas fa-eye"></i> View Classification</h3>
+                        <div class="result-value" style="color: var(--accent-color);">
+                            {{ echo_image.view_classification|default:"Not Available" }}
+                        </div>
+                        <div class="result-label">Echocardiographic View</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3><i class="fas fa-heart"></i> Ejection Fraction</h3>
+                        <div class="result-value {% if echo_image.ejection_fraction %}{% if echo_image.ejection_fraction >= 50 %}ef-normal{% elif echo_image.ejection_fraction >= 40 %}ef-borderline{% else %}ef-reduced{% endif %}{% endif %}">
+                            {% if echo_image.ejection_fraction %}
+                                {{ echo_image.ejection_fraction }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                        <div class="result-label">Left Ventricular Function</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3><i class="fas fa-stethoscope"></i> LV Function Grade</h3>
+                        <div class="result-value" style="color: var(--text-dark);">
+                            {{ echo_image.ef_classification|default:"Not Available" }}
+                        </div>
+                        <div class="result-label">Clinical Assessment</div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3><i class="fas fa-star"></i> Analysis Quality</h3>
+                        <div class="result-value" style="color: var(--warning-color);">
+                            {{ echo_image.analysis_quality|default:"N/A" }}
+                        </div>
+                        <div class="result-label">Image Quality Score</div>
+                    </div>
+                </div>
+
+                <!-- Cardiac Function Details -->
                 {% if analysis_data.cardiac_function %}
-                    <div class="col-md-3">
-                        <div class="metric-card">
-                            <div class="metric-value">{{ analysis_data.cardiac_function.ejection_fraction|default:"--" }}%</div>
-                            <div class="metric-label">Ejection Fraction</div>
+                <div class="detailed-section">
+                    <h3><i class="fas fa-heartbeat"></i> Cardiac Function Assessment</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="label">Ejection Fraction</div>
+                            <div class="value">{{ analysis_data.cardiac_function.ejection_fraction }}%</div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="metric-card">
-                            <div class="metric-value">{{ analysis_data.cardiac_function.stroke_volume|default:"--" }}</div>
-                            <div class="metric-label">Stroke Volume (ml)</div>
+                        <div class="detail-item">
+                            <div class="label">LV Function Grade</div>
+                            <div class="value">{{ analysis_data.cardiac_function.lv_function_grade }}</div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="metric-card">
-                            <div class="metric-value">{{ analysis_data.cardiac_function.end_diastolic_volume|default:"--" }}</div>
-                            <div class="metric-label">EDV (ml)</div>
+                        <div class="detail-item">
+                            <div class="label">Wall Motion</div>
+                            <div class="value">{{ analysis_data.cardiac_function.wall_motion }}</div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="metric-card">
-                            <div class="metric-value">{{ analysis_data.cardiac_function.end_systolic_volume|default:"--" }}</div>
-                            <div class="metric-label">ESV (ml)</div>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Analysis Results Grid -->
-            <div class="analysis-grid">
-                <!-- Cardiac Function Card -->
-                {% if analysis_data.cardiac_function %}
-                <div class="card">
-                    <h5 class="section-header">
-                        <i class="fas fa-heart-pulse"></i> Cardiac Function Assessment
-                    </h5>
-                    <div class="card-body">
-                        <!-- Ejection Fraction Visualization -->
-                        {% if analysis_data.cardiac_function.ejection_fraction %}
-                        <div class="ejection-fraction-gauge">
-                            <svg viewBox="0 0 200 100">
-                                <path class="gauge-bg" d="M 20 80 A 80 80 0 0 1 180 80" fill="none"></path>
-                                <path class="gauge-fill" d="M 20 80 A 80 80 0 0 1 180 80" fill="none" 
-                                      stroke="{% if analysis_data.cardiac_function.ejection_fraction >= 55 %}#00b894{% elif analysis_data.cardiac_function.ejection_fraction >= 45 %}#fdcb6e{% else %}#e17055{% endif %}"
-                                      stroke-dasharray="{{ analysis_data.cardiac_function.ejection_fraction|floatformat:0 }}, 100">
-                                </path>
-                                <text x="100" y="70" text-anchor="middle" class="h4">{{ analysis_data.cardiac_function.ejection_fraction }}%</text>
-                            </svg>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="row">
-                            <div class="col-6">
-                                <strong>LV Function:</strong><br>
-                                <span class="badge {% if analysis_data.cardiac_function.lv_function_grade == 'Normal' %}badge-success{% elif 'Mild' in analysis_data.cardiac_function.lv_function_grade %}badge-warning{% else %}badge-danger{% endif %}">
-                                    {{ analysis_data.cardiac_function.lv_function_grade|default:"Not specified" }}
-                                </span>
-                            </div>
-                            <div class="col-6">
-                                <strong>Volumes:</strong><br>
-                                EDV: {{ analysis_data.cardiac_function.end_diastolic_volume|default:"--" }} ml<br>
-                                ESV: {{ analysis_data.cardiac_function.end_systolic_volume|default:"--" }} ml
-                            </div>
+                        <div class="detail-item">
+                            <div class="label">Chamber Size</div>
+                            <div class="value">{{ analysis_data.cardiac_function.chamber_size }}</div>
                         </div>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Wall Motion Analysis -->
-                {% if analysis_data.wall_motion_analysis %}
-                <div class="card">
-                    <h5 class="section-header">
-                        <i class="fas fa-activity"></i> Wall Motion Analysis
-                    </h5>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <strong>Overall Assessment:</strong>
-                            <span class="badge {% if 'Normal' in analysis_data.wall_motion_analysis.overall_assessment %}badge-success{% elif 'Hypokinetic' in analysis_data.wall_motion_analysis.overall_assessment %}badge-warning{% else %}badge-info{% endif %}">
-                                {{ analysis_data.wall_motion_analysis.overall_assessment }}
-                            </span>
+                <!-- Clinical Findings -->
+                {% if analysis_data.clinical_findings %}
+                <div class="detailed-section">
+                    <h3><i class="fas fa-clipboard-list"></i> Clinical Findings</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="label">Valves</div>
+                            <div class="value">{{ analysis_data.clinical_findings.valves }}</div>
                         </div>
-                        
-                        {% if analysis_data.wall_motion_analysis.regional_analysis %}
-                        <h6>Regional Analysis:</h6>
-                        {% for region, status in analysis_data.wall_motion_analysis.regional_analysis.items %}
-                        <div class="finding-item">
-                            <strong>{{ region|title }}:</strong> 
-                            <span class="badge {% if status == 'Normal' %}badge-success{% else %}badge-warning{% endif %}">{{ status }}</span>
+                        <div class="detail-item">
+                            <div class="label">Pericardium</div>
+                            <div class="value">{{ analysis_data.clinical_findings.pericardium }}</div>
                         </div>
+                        <div class="detail-item">
+                            <div class="label">Regional Wall Motion</div>
+                            <div class="value">{{ analysis_data.clinical_findings.regional_wall_motion }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Image Quality Assessment -->
+                {% if analysis_data.image_quality %}
+                <div class="detailed-section">
+                    <h3><i class="fas fa-image"></i> Image Quality Assessment</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="label">Overall Quality</div>
+                            <div class="value">{{ analysis_data.image_quality.overall_quality }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">Resolution</div>
+                            <div class="value">{{ analysis_data.image_quality.resolution }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">Contrast</div>
+                            <div class="value">{{ analysis_data.image_quality.contrast }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Clinical Impression -->
+                {% if analysis_data.impression %}
+                <div class="detailed-section">
+                    <h3><i class="fas fa-user-md"></i> Clinical Impression</h3>
+                    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                        <p style="font-size: 1.1rem; line-height: 1.6; margin: 0; color: var(--text-dark);">
+                            {{ analysis_data.impression }}
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Recommendations -->
+                {% if analysis_data.recommendations %}
+                <div class="recommendations">
+                    <h3><i class="fas fa-lightbulb"></i> Clinical Recommendations</h3>
+                    <ul>
+                        {% for recommendation in analysis_data.recommendations %}
+                        <li>{{ recommendation }}</li>
                         {% endfor %}
-                        {% endif %}
-                    </div>
+                    </ul>
                 </div>
                 {% endif %}
 
-                <!-- Chamber Analysis -->
-                {% if analysis_data.chamber_analysis %}
-                <div class="card">
-                    <h5 class="section-header">
-                        <i class="fas fa-shapes"></i> Chamber Analysis
-                    </h5>
-                    <div class="card-body">
-                        {% if analysis_data.chamber_analysis.left_ventricle %}
-                        <h6><i class="fas fa-heart"></i> Left Ventricle:</h6>
-                        <div class="technical-detail">
-                            <div><strong>Size:</strong> {{ analysis_data.chamber_analysis.left_ventricle.size }}</div>
-                            <div><strong>Wall Thickness:</strong> {{ analysis_data.chamber_analysis.left_ventricle.wall_thickness|default:"Not measured" }}</div>
-                            <div><strong>Mass:</strong> {{ analysis_data.chamber_analysis.left_ventricle.mass|default:"Not calculated" }}</div>
+                <!-- Technical Details -->
+                {% if analysis_data.technical_notes %}
+                <div class="detailed-section">
+                    <h3><i class="fas fa-cog"></i> Technical Details</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="label">Processing Time</div>
+                            <div class="value">{{ analysis_data.technical_notes.processing_time }}</div>
                         </div>
-                        {% endif %}
-                        
-                        {% if analysis_data.chamber_analysis.left_atrium %}
-                        <h6><i class="fas fa-circle"></i> Left Atrium:</h6>
-                        <div class="technical-detail">
-                            <div><strong>Size:</strong> {{ analysis_data.chamber_analysis.left_atrium.size }}</div>
-                            <div><strong>Volume:</strong> {{ analysis_data.chamber_analysis.left_atrium.volume|default:"Not calculated" }}</div>
+                        <div class="detail-item">
+                            <div class="label">Frames Analyzed</div>
+                            <div class="value">{{ analysis_data.technical_notes.frames_analyzed }}</div>
                         </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Valve Assessment -->
-                {% if analysis_data.valve_assessment %}
-                <div class="card">
-                    <h5 class="section-header">
-                        <i class="fas fa-cog"></i> Valve Assessment
-                    </h5>
-                    <div class="card-body">
-                        {% for valve, status in analysis_data.valve_assessment.items %}
-                        <div class="finding-item">
-                            <strong>{{ valve|title|replace:'_',' ' }}:</strong> 
-                            <span class="badge {% if 'Normal' in status %}badge-success{% elif 'Trace' in status %}badge-info{% else %}badge-warning{% endif %}">{{ status }}</span>
+                        <div class="detail-item">
+                            <div class="label">Analysis Method</div>
+                            <div class="value">{{ analysis_data.technical_notes.analysis_method }}</div>
                         </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Quality Assessment -->
-                {% if analysis_data.quality_assessment %}
-                <div class="card">
-                    <h5 class="section-header">
-                        <i class="fas fa-check-circle"></i> Quality Assessment
-                    </h5>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <strong>Overall Quality:</strong> 
-                            <span class="badge badge-info">{{ analysis_data.quality_assessment.overall_quality }}</span>
-                        </div>
-                        
-                        {% if analysis_data.quality_assessment.confidence %}
-                        <div class="mb-3">
-                            <strong>Confidence Level:</strong>
-                            <div class="progress mt-2">
-                                <div class="progress-bar" role="progressbar" 
-                                     style="width: {{ analysis_data.quality_assessment.confidence }}%; background: linear-gradient(135deg, #00b894 0%, #00a085 100%);"
-                                     aria-valuenow="{{ analysis_data.quality_assessment.confidence }}" aria-valuemin="0" aria-valuemax="100">
-                                    {{ analysis_data.quality_assessment.confidence }}%
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <div class="technical-detail">
-                            <div><strong>Image Clarity:</strong> {{ analysis_data.quality_assessment.image_clarity|default:"Not assessed" }}</div>
-                            <div><strong>Acoustic Windows:</strong> {{ analysis_data.quality_assessment.acoustic_windows|default:"Not assessed" }}</div>
+                        <div class="detail-item">
+                            <div class="label">File Size</div>
+                            <div class="value">{{ echo_image.get_file_size_display }}</div>
                         </div>
                     </div>
                 </div>
                 {% endif %}
 
-                <!-- Video Analysis Summary -->
-                {% if analysis_data.video_analysis %}
-                <div class="card">
-                    <h5 class="section-header">
-                        <i class="fas fa-video"></i> Video Analysis Summary
-                    </h5>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-6">
-                                <div><strong>Total Frames:</strong> {{ analysis_data.video_analysis.total_frames }}</div>
-                                <div><strong>Analyzed Frames:</strong> {{ analysis_data.video_analysis.frames_analyzed }}</div>
-                            </div>
-                            <div class="col-6">
-                                <div><strong>Frame Rate:</strong> {{ analysis_data.video_analysis.frame_rate }}</div>
-                                <div><strong>Duration:</strong> {{ analysis_data.video_analysis.duration }}</div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Medical Disclaimer -->
+                <div class="disclaimer">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Important Medical Disclaimer</h4>
+                    <p>{{ analysis_data.disclaimer|default:"This analysis is for educational purposes only. Always consult with a qualified cardiologist for medical interpretation and clinical decision making." }}</p>
                 </div>
-                {% endif %}
-            </div>
 
-            <!-- Clinical Interpretation -->
-            {% if analysis_data.clinical_interpretation %}
-            <div class="card mb-4">
-                <h5 class="section-header">
-                    <i class="fas fa-stethoscope"></i> Clinical Interpretation
-                </h5>
-                <div class="card-body">
-                    {% if analysis_data.clinical_interpretation.summary %}
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-clipboard-list"></i> Summary:</h6>
-                        <p class="mb-0">{{ analysis_data.clinical_interpretation.summary }}</p>
-                    </div>
-                    {% endif %}
-
-                    {% if analysis_data.clinical_interpretation.findings %}
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-search"></i> Primary Findings:</h6>
-                            {% for finding in analysis_data.clinical_interpretation.findings.primary_findings %}
-                            <div class="finding-item">{{ finding }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-list"></i> Secondary Findings:</h6>
-                            {% for finding in analysis_data.clinical_interpretation.findings.secondary_findings %}
-                            <div class="finding-item">{{ finding }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if analysis_data.clinical_interpretation.recommendations %}
-                    <div class="mt-4">
-                        <h6><i class="fas fa-prescription"></i> Recommendations:</h6>
-                        <ul class="list-group list-group-flush">
-                            {% for recommendation in analysis_data.clinical_interpretation.recommendations %}
-                            <li class="list-group-item">{{ recommendation }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{% url 'echo_files_list' %}" class="action-btn">
+                        <i class="fas fa-list"></i> Back to Files
+                    </a>
+                    <a href="{% url 'upload_echo' %}" class="action-btn primary">
+                        <i class="fas fa-plus"></i> New Analysis
+                    </a>
+                    <button onclick="window.print()" class="action-btn">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                    <a href="{% url 'delete_echo' echo_image.id %}" class="action-btn danger" 
+                       onclick="return confirm('Are you sure you want to delete this echo analysis?')">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
                 </div>
             </div>
-            {% endif %}
-
-            <!-- Technical Details -->
-            {% if analysis_data.technical_details %}
-            <div class="card mb-4">
-                <h5 class="section-header">
-                    <i class="fas fa-cogs"></i> Technical Details
-                </h5>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div><strong>Analysis Method:</strong> {{ analysis_data.technical_details.analysis_method|default:"Computer Vision Analysis" }}</div>
-                            <div><strong>Segmentation Algorithm:</strong> {{ analysis_data.technical_details.segmentation_algorithm|default:"Advanced Edge Detection" }}</div>
-                        </div>
-                        <div class="col-md-6">
-                            <div><strong>Volume Calculation:</strong> {{ analysis_data.technical_details.volume_calculation|default:"Simpson's Method" }}</div>
-                            <div><strong>Processing Time:</strong> {{ analysis_data.processing_time|default:"Not recorded" }}</div>
-                        </div>
-                    </div>
-                    {% if analysis_data.technical_details.processing_notes %}
-                    <div class="mt-3">
-                        <div class="alert alert-secondary">
-                            <strong>Processing Notes:</strong> {{ analysis_data.technical_details.processing_notes }}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-        {% else %}
-            <div class="card">
-                <div class="card-body text-center">
-                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                    <h4>No Analysis Data Available</h4>
-                    <p>The analysis results are not available for this echo study.</p>
-                    <a href="{% url 'upload_echo' %}" class="btn btn-primary">Upload New Echo</a>
-                </div>
-            </div>
-        {% endif %}
-
-        <!-- Action Buttons -->
-        <div class="text-center mb-4">
-            <a href="{% url 'echo_files_list' %}" class="btn btn-secondary btn-lg me-3">
-                <i class="fas fa-list"></i> View All Echo Files
-            </a>
-            <a href="{% url 'upload_echo' %}" class="btn btn-primary btn-lg">
-                <i class="fas fa-plus"></i> Analyze New Echo
-            </a>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        @media print {
+            .navigation-bar, .action-buttons {
+                display: none;
+            }
+            body {
+                background: white;
+            }
+            .main-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
 </body>
 </html>

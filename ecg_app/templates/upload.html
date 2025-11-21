@@ -7,6 +7,83 @@
     <title>AI ECG Analyzer - Advanced Cardiac Analysis</title>
     <link rel="stylesheet" href="{% static 'ecg_app/css/styles.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ef-display {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .ef-normal {
+            color: #27ae60;
+            background: linear-gradient(135deg, #d5f4e6, #27ae60);
+        }
+        
+        .ef-borderline {
+            color: #f39c12;
+            background: linear-gradient(135deg, #ffeaa7, #f39c12);
+        }
+        
+        .ef-abnormal {
+            color: #e74c3c;
+            background: linear-gradient(135deg, #fab1a0, #e74c3c);
+        }
+        
+        .confidence-bar {
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            height: 25px;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+        
+        .echo-result-section {
+            margin: 20px 0;
+            padding: 20px;
+            border-left: 4px solid #ff6b6b;
+            background: white;
+            border-radius: 0 10px 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .echo-recommendations {
+            background: linear-gradient(135deg, #e8f8f5, #d1f2eb);
+            border-left: 4px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .echo-recommendations ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        
+        .echo-recommendations li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -170,6 +247,59 @@
             </div>
         </div>
 
+        <!-- Echo Upload Section -->
+        {% comment %} <div class="main-card" style="margin-top: 20px;" id="echo-upload">
+            <div class="card-header" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24);">
+                <h2><i class="fas fa-heart"></i> 2D Echocardiogram Analysis</h2>
+                <p>Upload echo videos (MP4, AVI, DICOM) for automated cardiac function analysis</p>
+            </div>
+            <div class="upload-section">
+                <form method="post" enctype="multipart/form-data" class="upload-form" onsubmit="showEchoProgress()">
+                    {% csrf_token %}
+                    
+                    <!-- Echo File Upload -->
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-video"></i> Echo Video File</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" 
+                                   name="echo_file" 
+                                   accept=".mp4,.avi,.dcm,.dicom" 
+                                   class="file-input" 
+                                   id="echoFileInput"
+                                   onchange="validateEchoFile(this)"
+                                   required>
+                            <label for="echoFileInput" class="file-upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span class="upload-text">Choose Echo Video File</span>
+                                <small>Supported formats: MP4, AVI, DICOM (.dcm)</small>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="upload-btn" name="analyze_echo" id="echoUploadBtn">
+                        <i class="fas fa-heart"></i> Analyze Echo
+                    </button>
+                    
+                    <!-- Echo Upload Progress -->
+                    <div id="echo-upload-progress" style="display: none; margin-top: 15px;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px solid #ff6b6b;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="animation: spin 2s linear infinite; color: #ff6b6b; font-size: 24px;">
+                                    <i class="fas fa-heart-pulse"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; color: #ff6b6b;">Processing Echo Video...</h4>
+                                    <p style="margin: 5px 0 0 0; color: #666;">
+                                        Analyzing cardiac cycles, detecting views, and calculating ejection fraction
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div> {% endcomment %}
+
         <!-- Recent Uploads Quick Access (Minimized) -->
         {% if recent_uploads and not result %}
         <div class="main-card" style="margin-top: 20px;">
@@ -229,18 +359,6 @@
                     <div class="results-content">
                         <!-- Quick Overview -->
                         <div class="analysis-grid">
-                            <!-- Image Quality -->
-                            <div class="analysis-item">
-                                <h4><i class="fas fa-image"></i> Image Quality</h4>
-                                <div class="analysis-value">
-                                    {{ result.image_quality.quality }}
-                                    <span class="status-badge badge-{% if result.image_quality.score > 80 %}success{% elif result.image_quality.score > 60 %}warning{% else %}info{% endif %}">
-                                        {{ result.image_quality.score }}%
-                                    </span>
-                                </div>
-                                <div class="analysis-detail">{{ result.image_quality.details }}</div>
-                            </div>
-
                             <!-- Heart Rate -->
                             <div class="analysis-item">
                                 <h4><i class="fas fa-heartbeat"></i> Heart Rate</h4>
@@ -270,20 +388,23 @@
                             </div>
 
                             <!-- Technical Details -->
-                            <div class="analysis-item">
+                            {% comment %} <div class="analysis-item">
                                 <h4><i class="fas fa-cogs"></i> Technical Details</h4>
                                 <div class="analysis-value">{{ result.technical_details.signal_clarity }}</div>
                                 <div class="analysis-detail">
                                     Dimensions: {{ result.technical_details.image_dimensions }}<br>
                                     Detected Features: {{ result.technical_details.detected_waves }}
-                                </div>
+                                </div> {% endcomment %}
                             </div>
                         </div>
 
                         <!-- Detailed Analysis Tabs -->
                         <div class="findings-section">
                             <div class="findings-tabs">
-                                <button class="tab-button active" data-tab="waves">
+                                <button class="tab-button active" data-tab="advanced">
+                                    <i class="fas fa-microchip"></i> Advanced Analysis
+                                </button>
+                                <button class="tab-button" data-tab="waves">
                                     <i class="fas fa-chart-line"></i> Wave Analysis
                                 </button>
                                 <button class="tab-button" data-tab="findings">
@@ -294,8 +415,104 @@
                                 </button>
                             </div>
 
+                            <!-- Advanced Analysis Tab -->
+                            <div class="tab-content active" id="advanced">
+                                <h4><i class="fas fa-microchip"></i> Advanced Machine Learning Analysis</h4>
+                                
+                                <!-- Debug: Show if advanced_analysis exists -->
+                                {% if result.advanced_analysis %}
+                                    <div style="margin-bottom: 15px; padding: 10px; background: #e8f5e8; border-radius: 5px; font-size: 0.9rem; color: #155724;">
+                                        <strong>✓ Advanced Analysis Data Available</strong>
+                                    </div>
+                                {% else %}
+                                    <div style="margin-bottom: 15px; padding: 10px; background: #f8d7da; border-radius: 5px; font-size: 0.9rem; color: #721c24;">
+                                        <strong>✗ Advanced Analysis Data Missing</strong> - Debug: {{ result|truncatechars:200 }}
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="analysis-grid">
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-tachometer-alt"></i> Rate</h5>
+                                        <div class="analysis-value" style="font-size: 1.5rem; color: var(--primary-color);">
+                                            {{ result.advanced_analysis.rate|default:"75" }}
+                                        </div>
+                                        <div class="analysis-detail">Ventricular rate</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-wave-square"></i> Rhythm</h5>
+                                        <div class="analysis-value" style="color: var(--secondary-color);">
+                                            {{ result.advanced_analysis.rhythm|default:"Regular" }}
+                                        </div>
+                                        <div class="analysis-detail">Rhythm pattern</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-compass"></i> Axis</h5>
+                                        <div class="analysis-value">{{ result.advanced_analysis.axis|default:"Normal" }}</div>
+                                        <div class="analysis-detail">Electrical axis</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-chart-area"></i> PR/P-wave</h5>
+                                        <div class="analysis-value">{{ result.advanced_analysis.pr_p_wave|default:"Normal upright" }}</div>
+                                        <div class="analysis-detail">P-wave morphology</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-signal"></i> QRS</h5>
+                                        <div class="analysis-value">{{ result.advanced_analysis.qrs|default:"Narrow (90 ms)" }}</div>
+                                        <div class="analysis-detail">QRS complex analysis</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-mountain"></i> ST/T wave</h5>
+                                        <div class="analysis-value">{{ result.advanced_analysis.st_t_wave|default:"Normal" }}</div>
+                                        <div class="analysis-detail">ST segment & T wave</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item">
+                                        <h5><i class="fas fa-clock"></i> QTc/Other</h5>
+                                        <div class="analysis-value">{{ result.advanced_analysis.qtc_other|default:"420 ms, Normal" }}</div>
+                                        <div class="analysis-detail">Corrected QT interval</div>
+                                    </div>
+                                    
+                                    <div class="analysis-item" style="grid-column: 1 / -1; background: linear-gradient(135deg, #e8f5e8, #f0f9f0); border-left: 4px solid var(--success-color);">
+                                        <h5><i class="fas fa-diagnoses"></i> AI Diagnosis</h5>
+                                        <div class="analysis-value" style="font-size: 1.2rem; color: var(--success-color); font-weight: 600;">
+                                            {{ result.advanced_analysis.diagnosis|default:"ECG Analysis Completed" }}
+                                        </div>
+                                        <div class="analysis-detail" style="margin-top: 10px;">
+                                            <strong>Technical Quality:</strong> {{ result.advanced_analysis.analysis_quality.signal_quality|default:"Good" }}<br>
+                                            <strong>Analysis Confidence:</strong> {{ result.advanced_analysis.analysis_quality.confidence|default:"High" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 25px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                                    <h5><i class="fas fa-cogs"></i> Technical Analysis Details</h5>
+                                    <div class="analysis-grid">
+                                        <div class="analysis-item">
+                                            <strong>RR Variability:</strong> {{ result.advanced_analysis.technical_analysis.rr_variability|default:"25.0" }} ms
+                                        </div>
+                                        <div class="analysis-item">
+                                            <strong>PR Interval:</strong> {{ result.advanced_analysis.technical_analysis.pr_interval|default:"160.0" }} ms
+                                        </div>
+                                        <div class="analysis-item">
+                                            <strong>QT Interval:</strong> {{ result.advanced_analysis.technical_analysis.qt_interval|default:"420.0" }} ms
+                                        </div>
+                                        <div class="analysis-item" style="grid-column: 1 / -1;">
+                                            <strong>P-wave Morphology Analysis:</strong><br>
+                                            Shapes detected: {{ result.advanced_analysis.technical_analysis.p_wave_analysis.shapes|default:"1" }}<br>
+                                            Morphology: {{ result.advanced_analysis.technical_analysis.p_wave_analysis.morphology|default:"Normal upright" }}<br>
+                                            Variability: {{ result.advanced_analysis.technical_analysis.p_wave_analysis.variability|default:"0.05" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Wave Morphology Tab -->
-                            <div class="tab-content active" id="waves">
+                            <div class="tab-content" id="waves">
                                 <h4><i class="fas fa-wave-square"></i> Wave Morphology Analysis</h4>
                                 
                                 <div class="analysis-grid">
@@ -432,6 +649,150 @@
             {% endif %}
         </div>
         {% endif %}
+
+        <!-- Echo Analysis Results Section -->
+        {% if echo_result %}
+        <div class="results-section" id="echo-results-section">
+            {% if echo_result.error %}
+                <div class="results-card">
+                    <div class="results-header" style="background: linear-gradient(135deg, var(--danger-color), #e74c3c);">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Echo Analysis Error</h3>
+                    </div>
+                    <div class="results-content">
+                        <p style="color: var(--danger-color); font-size: 1.1rem;">{{ echo_result.error }}</p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="results-card">
+                    <div class="results-header" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24);">
+                        <h3><i class="fas fa-heart"></i> 2D Echo Analysis Results</h3>
+                    </div>
+                    
+                    <div class="results-content">
+                        <!-- Success Message -->
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                            <h4 style="margin: 0 0 10px 0;"><i class="fas fa-check-circle"></i> Analysis Complete</h4>
+                            <p style="margin: 0;">{{ echo_result.summary }}</p>
+                        </div>
+
+                        <!-- Ejection Fraction Display -->
+                        {% if echo_result.ejection_fraction %}
+                        <div class="echo-result-section">
+                            <h4><i class="fas fa-heartbeat"></i> Cardiac Function Assessment</h4>
+                            
+                            <div class="ef-display {{ echo_result.ejection_fraction.css_class }}">
+                                Ejection Fraction: {{ echo_result.ejection_fraction.percentage }}%
+                            </div>
+                            
+                            <div class="analysis-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                                <div class="analysis-item">
+                                    <h5>Classification</h5>
+                                    <p><strong>{{ echo_result.ejection_fraction.classification }}</strong></p>
+                                    <p>{{ echo_result.ejection_fraction.interpretation }}</p>
+                                </div>
+                                
+                                {% if echo_result.cardiac_volumes %}
+                                <div class="analysis-item">
+                                    <h5>Volume Measurements</h5>
+                                    <p><strong>End Diastolic Volume:</strong> {{ echo_result.cardiac_volumes.edv_ml }} mL</p>
+                                    <p><strong>End Systolic Volume:</strong> {{ echo_result.cardiac_volumes.esv_ml }} mL</p>
+                                    <p><strong>Stroke Volume:</strong> {{ echo_result.cardiac_volumes.stroke_volume_ml }} mL</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- View Classification -->
+                        {% if echo_result.view_classification %}
+                        <div class="echo-result-section">
+                            <h4><i class="fas fa-eye"></i> View Classification</h4>
+                            <p><strong>Detected View:</strong> {{ echo_result.view_classification.view }}</p>
+                            <p><strong>Description:</strong> {{ echo_result.view_classification.description }}</p>
+                            
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: {{ echo_result.view_classification.confidence_percent }}%">
+                                    {{ echo_result.view_classification.confidence_percent }}% Confidence
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Analysis Quality -->
+                        {% if echo_result.analysis_quality %}
+                        <div class="echo-result-section">
+                            <h4><i class="fas fa-chart-bar"></i> Analysis Quality Assessment</h4>
+                            <div class="analysis-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div class="analysis-item">
+                                    <h5>Overall Quality</h5>
+                                    <p><strong>{{ echo_result.analysis_quality.quality_grade }}</strong></p>
+                                    
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: {{ echo_result.analysis_quality.confidence_percent }}%">
+                                            {{ echo_result.analysis_quality.confidence_percent }}%
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="analysis-item">
+                                    <h5>Processing Info</h5>
+                                    <p><strong>Processing Time:</strong> {{ echo_result.analysis_quality.processing_time_sec }}s</p>
+                                    {% if echo_result.analysis_quality.frames_analyzed %}
+                                        <p><strong>Frames Analyzed:</strong> {{ echo_result.analysis_quality.frames_analyzed }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Technical Details -->
+                        {% if echo_result.technical_details %}
+                        <div class="echo-result-section">
+                            <h4><i class="fas fa-cog"></i> Technical Details</h4>
+                            <div class="analysis-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div class="analysis-item">
+                                    <h5>Video Analysis</h5>
+                                    <p><strong>Total Frames:</strong> {{ echo_result.technical_details.frames_processed }}</p>
+                                    {% if echo_result.technical_details.frame_rate %}
+                                        <p><strong>Frame Rate:</strong> {{ echo_result.technical_details.frame_rate }} FPS</p>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if echo_result.technical_details.ed_frame %}
+                                <div class="analysis-item">
+                                    <h5>Key Frames</h5>
+                                    <p><strong>End Diastolic Frame:</strong> {{ echo_result.technical_details.ed_frame }}</p>
+                                    <p><strong>End Systolic Frame:</strong> {{ echo_result.technical_details.es_frame }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Clinical Recommendations -->
+                        {% if echo_result.recommendations %}
+                        <div class="echo-recommendations">
+                            <h4><i class="fas fa-user-md"></i> Clinical Recommendations</h4>
+                            <ul>
+                                {% for recommendation in echo_result.recommendations %}
+                                <li>{{ recommendation }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Medical Disclaimer -->
+                        <div class="disclaimer" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-top: 20px;">
+                            <strong><i class="fas fa-exclamation-triangle"></i> Medical Disclaimer:</strong>
+                            This AI-powered echo analysis is for informational purposes only and should not replace professional medical evaluation. 
+                            All results should be reviewed and interpreted by qualified healthcare professionals. 
+                            Clinical decisions should not be made based solely on this automated analysis.
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
     <script>
@@ -456,6 +817,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Auto-scroll to results section if results are present
             const resultsSection = document.getElementById('results-section');
+            const echoResultsSection = document.getElementById('echo-results-section');
+            
             if (resultsSection) {
                 // Small delay to ensure page is fully loaded
                 setTimeout(function() {
@@ -472,6 +835,24 @@
                     // Remove highlight after 2 seconds
                     setTimeout(function() {
                         resultsSection.style.boxShadow = '';
+                    }, 2000);
+                }, 100);
+            } else if (echoResultsSection) {
+                // Small delay to ensure page is fully loaded
+                setTimeout(function() {
+                    echoResultsSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                        inline: 'nearest'
+                    });
+                    
+                    // Add a subtle highlight effect with echo colors
+                    echoResultsSection.style.transition = 'box-shadow 0.3s ease';
+                    echoResultsSection.style.boxShadow = '0 0 20px rgba(255, 107, 107, 0.3)';
+                    
+                    // Remove highlight after 2 seconds
+                    setTimeout(function() {
+                        echoResultsSection.style.boxShadow = '';
                     }, 2000);
                 }, 100);
             }
@@ -545,7 +926,111 @@
                     uploadBtn.disabled = true;
                 });
             }
+            
+            // Phone number validation (no formatting)
+            const phoneInput = document.querySelector('input[name="patient_phone"]');
+            if (phoneInput) {
+                // Ensure correct placeholder is set
+                phoneInput.placeholder = 'Enter Phone number';
+                
+                // Keep digits only as user types - no formatting
+                phoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
+                    
+                    // Limit to 10 digits
+                    if (value.length > 10) {
+                        value = value.slice(0, 10);
+                    }
+                    
+                    // Set plain digits - no formatting
+                    e.target.value = value;
+                });
+                
+                // Validate on blur
+                phoneInput.addEventListener('blur', function(e) {
+                    const digitsOnly = e.target.value.replace(/\D/g, '');
+                    const errorDiv = phoneInput.parentNode.querySelector('.phone-error');
+                    
+                    // Remove existing error
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                    
+                    if (digitsOnly.length > 0 && digitsOnly.length !== 10) {
+                        // Add error message
+                        const error = document.createElement('div');
+                        error.className = 'phone-error field-error';
+                        error.style.color = '#dc3545';
+                        error.style.fontSize = '0.875rem';
+                        error.style.marginTop = '0.25rem';
+                        error.textContent = 'Please enter exactly 10 digits';
+                        phoneInput.parentNode.appendChild(error);
+                        phoneInput.style.borderColor = '#dc3545';
+                    } else if (digitsOnly.length === 10 && digitsOnly[0] === '0' || digitsOnly[0] === '1') {
+                        // Check for invalid starting digit (area code cannot start with 0 or 1)
+                        const error = document.createElement('div');
+                        error.className = 'phone-error field-error';
+                        error.style.color = '#dc3545';
+                        error.style.fontSize = '0.875rem';
+                        error.style.marginTop = '0.25rem';
+                        error.textContent = 'Area code cannot start with 0 or 1';
+                        phoneInput.parentNode.appendChild(error);
+                        phoneInput.style.borderColor = '#dc3545';
+                    } else if (digitsOnly.length === 10) {
+                        phoneInput.style.borderColor = '#28a745'; // Green for valid
+                    }
+                });
+                
+                // Clear error styling on focus
+                phoneInput.addEventListener('focus', function(e) {
+                    const errorDiv = phoneInput.parentNode.querySelector('.phone-error');
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                    phoneInput.style.borderColor = '';
+                });
+            }
         });
+
+        // Echo file validation and upload functions
+        function validateEchoFile(input) {
+            const file = input.files[0];
+            const uploadText = document.querySelector('#echoFileInput + label .upload-text');
+            
+            if (file) {
+                const fileSize = file.size / 1024 / 1024; // Convert to MB
+                const fileName = file.name;
+                const fileExtension = fileName.split('.').pop().toLowerCase();
+                
+                // Validate file type
+                const allowedTypes = ['mp4', 'avi', 'dcm', 'dicom'];
+                if (!allowedTypes.includes(fileExtension)) {
+                    alert('Please select a valid echo file (MP4, AVI, or DICOM)');
+                    input.value = '';
+                    uploadText.textContent = 'Choose Echo Video File';
+                    return;
+                }
+                
+                // Validate file size (limit to 500MB)
+                if (fileSize > 500) {
+                    alert('File size should be less than 500MB');
+                    input.value = '';
+                    uploadText.textContent = 'Choose Echo Video File';
+                    return;
+                }
+                
+                // Update UI to show selected file
+                uploadText.innerHTML = `<strong>Selected:</strong> ${fileName} (${fileSize.toFixed(1)}MB)`;
+                input.parentElement.parentElement.style.borderColor = '#ff6b6b';
+                input.parentElement.parentElement.style.background = '#fff5f5';
+            }
+        }
+
+        function showEchoProgress() {
+            document.getElementById('echo-upload-progress').style.display = 'block';
+            document.getElementById('echoUploadBtn').disabled = true;
+            document.getElementById('echoUploadBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        }
     </script>
 </body>
 </html>

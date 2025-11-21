@@ -1,18 +1,25 @@
 """
 ECG Image Analysis Module
-Real-time ECG image processing and signal extraction for accurate medical analysis
+Advanced ECG analysis with machine learning and signal processing
 """
 
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy import signal
-from scipy.signal import find_peaks
-from skimage import filters, morphology, measure
-from skimage.color import rgb2gray
-from skimage.filters import threshold_otsu
-import os
-import json
+# Import the new advanced analyzer
+from .advanced_ecg_analyzer import AdvancedECGAnalyzer, analyze_ecg_image
+
+# Legacy compatibility - redirect to new analyzer
+class ECGImageAnalyzer(AdvancedECGAnalyzer):
+    """Legacy wrapper for backward compatibility"""
+    
+    def __init__(self):
+        super().__init__()
+    
+    def perform_complete_analysis(self, image_path):
+        """Legacy method - redirect to new structured report"""
+        return self.generate_structured_report(image_path)
+    
+    def analyze(self, image_path):
+        """Legacy analyze method"""
+        return self.generate_structured_report(image_path)
 
 class ECGImageAnalyzer:
     """Advanced ECG image analysis for extracting medical parameters"""
@@ -140,70 +147,118 @@ class ECGImageAnalyzer:
         return peaks
     
     def calculate_heart_rate(self):
-        """Calculate heart rate from R-peak intervals"""
+        """Calculate heart rate with improved accuracy for irregular rhythms"""
         r_peaks = self.detect_r_peaks()
         
         if len(r_peaks) < 2:
             return None, "Insufficient peaks detected"
         
-        # Calculate RR intervals (in pixels, convert to time)
+        # Calculate RR intervals (in pixels)
         rr_intervals = np.diff(r_peaks)
         
-        # Estimate time scaling (assuming standard ECG paper speed)
-        # Standard: 25mm/s paper speed, typical ECG duration 10-12 seconds
-        estimated_duration = 10  # seconds
-        pixel_to_time = estimated_duration / len(self.signal_data)
+        # Improved time scaling for digital ECG images
+        # Try multiple scaling approaches
+        image_width = self.preprocessed_image.shape[1] if self.preprocessed_image is not None else len(self.signal_data)
         
-        # Convert to time intervals
-        rr_intervals_time = rr_intervals * pixel_to_time
+        # Method 1: Assume 10-second rhythm strip (most common)
+        pixel_to_time_10s = 10.0 / image_width
         
-        # Calculate heart rate (beats per minute)
-        if len(rr_intervals_time) > 0:
-            avg_rr_interval = np.mean(rr_intervals_time)
-            heart_rate = 60 / avg_rr_interval
+        # Method 2: Assume 6-second rhythm strip (also common)
+        pixel_to_time_6s = 6.0 / image_width
+        
+        # Calculate heart rates with both methods
+        heart_rates = []
+        
+        for pixel_to_time, method in [(pixel_to_time_10s, "10s strip"), (pixel_to_time_6s, "6s strip")]:
+            rr_intervals_time = rr_intervals * pixel_to_time
             
-            # Validate reasonable heart rate range
-            if 30 <= heart_rate <= 250:
-                return int(round(heart_rate)), "Normal detection"
-            else:
-                # If unreasonable, try alternative calculation
-                total_time = len(self.signal_data) * pixel_to_time
-                beats_per_second = len(r_peaks) / total_time
-                heart_rate = beats_per_second * 60
-                return int(round(heart_rate)), "Alternative calculation"
+            if len(rr_intervals_time) > 0:
+                # For irregular rhythms like AFib, use median instead of mean
+                rr_variability = np.std(rr_intervals_time) / np.mean(rr_intervals_time) if np.mean(rr_intervals_time) > 0 else 0
+                
+                if rr_variability > 0.15:  # Irregular rhythm
+                    # Use a more robust calculation for irregular rhythms
+                    # Count total beats over total time
+                    total_beats = len(r_peaks) - 1  # Intervals between peaks
+                    total_time = np.sum(rr_intervals_time)
+                    if total_time > 0:
+                        heart_rate = (total_beats / total_time) * 60
+                        if 40 <= heart_rate <= 200:
+                            heart_rates.append((heart_rate, f"Irregular rhythm - {method}"))
+                else:
+                    # Regular rhythm - use mean RR interval
+                    avg_rr_interval = np.mean(rr_intervals_time)
+                    heart_rate = 60 / avg_rr_interval
+                    if 40 <= heart_rate <= 200:
+                        heart_rates.append((heart_rate, f"Regular rhythm - {method}"))
         
-        return None, "Unable to calculate"
+        # Return the most reasonable heart rate
+        if heart_rates:
+            # For irregular rhythms like AFib, prefer the higher estimate
+            best_hr, method = max(heart_rates, key=lambda x: x[0]) if len(heart_rates) > 1 else heart_rates[0]
+            return int(round(best_hr)), method
+        
+        # Fallback calculation
+        if len(r_peaks) >= 3:
+            # Simple beat counting method
+            estimated_hr = (len(r_peaks) / 10.0) * 60  # Assume 10 seconds
+            if estimated_hr > 120:  # Likely fast irregular rhythm
+                return int(round(estimated_hr)), "Fast irregular rhythm detected"
+            
+        return None, "Unable to calculate reliable heart rate"
     
     def analyze_rhythm(self):
-        """Analyze heart rhythm patterns"""
-        r_peaks = self.detect_r_peaks()
+        """Enhanced rhythm analysis to detect Atrial Flutter and other arrhythmias"""
+        if len(self.signal_data) == 0:
+            return "Unable to determine rhythm", "Insufficient signal data"
         
-        if len(r_peaks) < 3:
-            return "Insufficient data", "Unable to determine rhythm"
+        # Enhanced signal processing for rhythm analysis
+        signal_normalized = (self.signal_data - np.mean(self.signal_data)) / np.std(self.signal_data)
+        from scipy.signal import find_peaks
         
-        # Calculate RR interval variability
-        rr_intervals = np.diff(r_peaks)
-        rr_variability = np.std(rr_intervals) / np.mean(rr_intervals)
+        # Detect QRS peaks with optimized parameters
+        peaks, properties = find_peaks(
+            signal_normalized, 
+            height=0.3, 
+            distance=15, 
+            prominence=0.25
+        )
         
-        # Get heart rate
-        heart_rate, _ = self.calculate_heart_rate()
+        if len(peaks) < 3:
+            return "Insufficient data for rhythm analysis", "Too few peaks detected"
         
-        if heart_rate is None:
-            return "Unknown rhythm", "Heart rate calculation failed"
+        # Calculate RR intervals and heart rate
+        rr_intervals = np.diff(peaks)
+        mean_rr = np.mean(rr_intervals)
+        estimated_hr = 60000 / (mean_rr * 10) if mean_rr > 0 else 0
         
-        # Basic rhythm classification
-        if rr_variability > 0.15:
-            if heart_rate > 100:
-                return "Atrial fibrillation", "Irregular rhythm with fast rate"
+        # Enhanced rhythm classification
+        cv = self._calculate_coefficient_of_variation(rr_intervals)
+        
+        # Check for baseline characteristics (Flutter vs Fibrillation)
+        baseline_variability = self._analyze_baseline_pattern()
+        
+        # Rhythm determination with medical accuracy
+        if cv < 0.10:  # Very regular rhythm
+            if estimated_hr > 140:  # Fast regular rhythm
+                if baseline_variability == "seesaw":
+                    return "Atrial flutter", f"Regular fast rhythm with seesaw baseline (Rate: ~{int(estimated_hr)} BPM)"
+                else:
+                    return "Sinus tachycardia", f"Regular fast rhythm (Rate: ~{int(estimated_hr)} BPM)"
+            elif estimated_hr > 100:
+                return "Sinus tachycardia", "Regular fast rhythm"
+            elif estimated_hr < 60:
+                return "Sinus bradycardia", "Regular slow rhythm"
             else:
-                return "Irregular rhythm", "Variable RR intervals detected"
+                return "Normal sinus rhythm", "Regular normal rhythm"
+        elif cv > 0.15:  # Irregular rhythm
+            if baseline_variability == "fibrillating":
+                return "Atrial fibrillation", f"Irregular rhythm with fibrillating baseline (CV: {cv:.3f})"
+            else:
+                return "Irregular rhythm", f"Irregular rhythm pattern (CV: {cv:.3f})"
         else:
-            if heart_rate < 60:
-                return "Sinus bradycardia", "Regular slow heart rhythm"
-            elif heart_rate > 100:
-                return "Sinus tachycardia", "Regular fast heart rhythm"
-            else:
-                return "Normal sinus rhythm", "Regular normal heart rhythm"
+            # Mildly irregular
+            return "Sinus rhythm with occasional irregularity", "Mostly regular with minor variations"
     
     def measure_intervals(self):
         """Measure PR, QRS, and QT intervals"""
@@ -273,42 +328,137 @@ class ECGImageAnalyzer:
         return intervals
     
     def analyze_wave_morphology(self):
-        """Analyze P-waves, QRS complexes, and T-waves"""
+        """Enhanced wave morphology analysis with AFib detection"""
         if len(self.signal_data) == 0:
             return {}
         
         r_peaks = self.detect_r_peaks()
         intervals = self.measure_intervals()
         
+        # Get rhythm analysis for context
+        rhythm_type, rhythm_notes = self.analyze_rhythm()
+        
         # Signal statistics for morphology assessment
         signal_range = np.max(self.signal_data) - np.min(self.signal_data)
         signal_std = np.std(self.signal_data)
         
-        morphology = {
-            "p_wave": {
-                "present": len(r_peaks) > 0,
+        # Analyze baseline for rhythm-specific patterns
+        baseline_pattern = self._analyze_baseline_pattern()
+        baseline_analysis = self._analyze_baseline_fibrillation()
+        
+        # P-wave analysis based on rhythm and baseline pattern
+        if "flutter" in rhythm_type.lower() or baseline_pattern == "seesaw":
+            p_wave_analysis = {
+                "present": False,
+                "morphology": "No P-waves. Seesaw baseline (Flutter waves)",
+                "duration": "N/A",
+                "amplitude": "N/A",
+                "baseline": "Seesaw baseline with Flutter waves at ~300/min"
+            }
+        elif "fibrillation" in rhythm_type.lower() or baseline_analysis['has_fibrillation']:
+            p_wave_analysis = {
+                "present": False,
+                "morphology": "Absent - fibrillating baseline",
+                "duration": "N/A",
+                "amplitude": "N/A",
+                "baseline": "Fibrillating baseline present"
+            }
+        else:
+            p_wave_analysis = {
+                "present": len(r_peaks) > 2,
                 "morphology": "Normal upright" if signal_std > 10 else "Low amplitude",
-                "duration": "100 ms",  # Typical value
-                "amplitude": f"{np.random.uniform(0.5, 2.0):.1f} mV"
-            },
-            "qrs_complex": {
-                "width": intervals.get('qrs_duration', '90 ms'),
-                "amplitude": f"{signal_range * 0.1:.1f} mV",
-                "morphology": "Normal" if len(r_peaks) > 2 else "Unable to assess"
-            },
-            "t_wave": {
-                "polarity": "Positive" if np.mean(self.signal_data) > np.median(self.signal_data) else "Negative",
-                "symmetry": "Symmetric",
-                "amplitude": f"{signal_range * 0.05:.1f} mV"
-            },
+                "duration": "~100 ms",
+                "amplitude": f"{signal_range * 0.05:.1f} units"
+            }
+        
+        # QRS analysis
+        qrs_analysis = {
+            "width": intervals.get('qrs_duration', '~90 ms'),
+            "amplitude": f"{signal_range * 0.3:.1f} units",
+            "morphology": "Narrow complex" if len(r_peaks) > 2 else "Unable to assess"
+        }
+        
+        # T-wave analysis
+        t_wave_analysis = {
+            "polarity": "Variable" if "irregular" in rhythm_type.lower() else "Normal",
+            "symmetry": "Variable" if "fibrillation" in rhythm_type.lower() else "Symmetric",
+            "amplitude": f"{signal_range * 0.1:.1f} units"
+        }
+        
+        morphology = {
+            "p_wave": p_wave_analysis,
+            "qrs_complex": qrs_analysis,
+            "t_wave": t_wave_analysis,
             "intervals": intervals,
             "st_segment": {
-                "elevation": "Normal" if signal_std < 20 else "Possible elevation",
-                "morphology": "Isoelectric"
+                "elevation": "Normal" if signal_std < 30 else "Possible changes",
+                "morphology": "Variable" if "irregular" in rhythm_type.lower() else "Isoelectric"
+            },
+            "rhythm_context": {
+                "type": rhythm_type,
+                "baseline_fibrillation": baseline_analysis['has_fibrillation'],
+                "rr_variability": baseline_analysis.get('rr_variability', 'Normal')
             }
         }
         
         return morphology
+    
+    def _analyze_baseline_fibrillation(self):
+        """Analyze ECG baseline for fibrillation activity"""
+        if len(self.signal_data) == 0:
+            return {'has_fibrillation': False, 'confidence': 0}
+        
+        try:
+            r_peaks = self.detect_r_peaks()
+            
+            if len(r_peaks) < 3:
+                return {'has_fibrillation': False, 'confidence': 0}
+            
+            # Calculate RR interval variability
+            rr_intervals = np.diff(r_peaks)
+            if len(rr_intervals) < 2:
+                return {'has_fibrillation': False, 'confidence': 0}
+            
+            # Coefficient of variation
+            cv_rr = np.std(rr_intervals) / np.mean(rr_intervals) if np.mean(rr_intervals) > 0 else 0
+            
+            # Analyze segments between R-peaks for irregular activity
+            baseline_variability = 0
+            segment_count = 0
+            
+            for i in range(len(r_peaks) - 1):
+                start_idx = min(r_peaks[i] + 10, len(self.signal_data) - 1)
+                end_idx = max(r_peaks[i + 1] - 10, start_idx + 1)
+                
+                if end_idx > start_idx and end_idx <= len(self.signal_data):
+                    segment = self.signal_data[start_idx:end_idx]
+                    if len(segment) > 5:
+                        baseline_variability += np.std(segment)
+                        segment_count += 1
+            
+            if segment_count > 0:
+                avg_baseline_variability = baseline_variability / segment_count
+                signal_amplitude = np.max(self.signal_data) - np.min(self.signal_data)
+                variability_ratio = avg_baseline_variability / (signal_amplitude + 1e-6)
+                
+                # Criteria for fibrillation:
+                # 1. High RR variability (CV > 0.15)
+                # 2. High baseline variability
+                has_fibrillation = cv_rr > 0.15 and variability_ratio > 0.05
+                
+                confidence = min(cv_rr * 2 + variability_ratio * 10, 1.0)
+                
+                return {
+                    'has_fibrillation': has_fibrillation,
+                    'confidence': confidence,
+                    'rr_variability': 'High' if cv_rr > 0.15 else 'Normal',
+                    'baseline_variability': variability_ratio
+                }
+                
+        except Exception as e:
+            print(f"Error in baseline analysis: {e}")
+            
+        return {'has_fibrillation': False, 'confidence': 0}
     
     def perform_complete_analysis(self, image_path):
         """Perform complete ECG analysis on image"""
@@ -361,14 +511,15 @@ class ECGImageAnalyzer:
                     "primary_findings": [
                         rhythm_type,
                         f"Heart rate: {heart_rate or 'Unable to determine'} bpm",
-                        "ECG analysis completed from image"
+                        "Computer-assisted ECG interpretation" if heart_rate else "Limited analysis due to image quality"
                     ],
                     "secondary_findings": [
                         f"Image quality: {quality_score['quality']}",
-                        "Real ECG image analysis performed",
-                        rhythm_notes
+                        "Advanced image processing analysis",
+                        rhythm_notes,
+                        f"P-wave status: {'Absent (fibrillating baseline)' if 'fibrillation' in rhythm_type.lower() else 'Present'}"
                     ],
-                    "overall_impression": f"ECG shows {rhythm_type.lower()}"
+                    "overall_impression": self._generate_clinical_impression(rhythm_type, heart_rate)
                 },
                 "recommendations": {
                     "immediate_actions": [
@@ -528,6 +679,153 @@ class ECGImageAnalyzer:
                 "disclaimer": "This is a simulated analysis. Always consult with a qualified healthcare provider."
             }
         }
+
+    def _generate_clinical_impression(self, rhythm_type, heart_rate):
+        """Generate comprehensive clinical impression based on rhythm and rate"""
+        if not heart_rate:
+            return "Unable to generate impression - inadequate signal quality"
+        
+        impression_parts = []
+        
+        # Rhythm assessment
+        if 'flutter' in rhythm_type.lower():
+            impression_parts.append("Atrial flutter with")
+            # Rate classification for Flutter
+            if heart_rate < 75:
+                impression_parts.append("4:1 or higher block (slow ventricular response)")
+            elif heart_rate >= 140 and heart_rate <= 160:
+                impression_parts.append("2:1 block (typical ventricular response)")
+            elif heart_rate >= 90 and heart_rate <= 110:
+                impression_parts.append("3:1 block (controlled ventricular response)")
+            else:
+                impression_parts.append(f"variable block (ventricular rate {heart_rate} bpm)")
+        elif 'fibrillation' in rhythm_type.lower():
+            if 'atrial' in rhythm_type.lower():
+                impression_parts.append("Atrial fibrillation with")
+                # Rate classification for AFib
+                if heart_rate < 60:
+                    impression_parts.append("slow ventricular response")
+                elif heart_rate > 100:
+                    impression_parts.append("rapid ventricular response")
+                else:
+                    impression_parts.append("controlled ventricular response")
+            else:
+                impression_parts.append("Irregular rhythm consistent with fibrillation")
+        elif 'bradycardia' in rhythm_type.lower():
+            impression_parts.append(f"Sinus bradycardia at {heart_rate} bpm")
+        elif 'tachycardia' in rhythm_type.lower():
+            impression_parts.append(f"Sinus tachycardia at {heart_rate} bpm")
+        else:
+            if heart_rate < 60:
+                impression_parts.append(f"Bradycardia at {heart_rate} bpm")
+            elif heart_rate > 100:
+                impression_parts.append(f"Tachycardia at {heart_rate} bpm")
+            else:
+                impression_parts.append(f"Normal heart rate at {heart_rate} bpm")
+        
+        # Add clinical significance
+        if 'fibrillation' in rhythm_type.lower() and heart_rate > 100:
+            impression_parts.append("- Consider rate control and anticoagulation evaluation")
+        elif heart_rate > 150:
+            impression_parts.append("- Rapid rate requires clinical evaluation")
+        elif heart_rate < 50:
+            impression_parts.append("- Slow rate may require monitoring")
+        
+        return " ".join(impression_parts)
+    
+    def _get_p_wave_description(self, baseline_pattern, has_fibrillating_baseline):
+        """Get appropriate P-wave description based on rhythm"""
+        if baseline_pattern == "seesaw":
+            return "No P-waves. Seesaw baseline (Flutter waves)"
+        elif has_fibrillating_baseline:
+            return "Absent (fibrillating baseline)"
+        else:
+            return "Normal upright"
+    
+    def _get_atrial_rate_description(self, baseline_pattern, has_fibrillating_baseline):
+        """Get appropriate atrial rate description"""
+        if baseline_pattern == "seesaw":
+            return "~300 atrial beats/min (Flutter rate)"
+        elif has_fibrillating_baseline:
+            return "300+ irregular atrial activity"
+        else:
+            return "Normal"
+
+    def _calculate_coefficient_of_variation(self, rr_intervals):
+        """Calculate coefficient of variation for RR intervals (used for rhythm analysis)"""
+        if len(rr_intervals) < 2:
+            return 0.0
+        
+        mean_rr = np.mean(rr_intervals)
+        std_rr = np.std(rr_intervals)
+        
+        return std_rr / mean_rr if mean_rr > 0 else 0.0
+    
+    def _analyze_baseline_pattern(self):
+        """Analyze baseline pattern to distinguish Flutter seesaw from Fibrillation"""
+        if len(self.signal_data) == 0:
+            return "unknown"
+        
+        try:
+            # Analyze frequency components in baseline
+            from scipy.fft import fft, fftfreq
+            
+            # Remove QRS complexes by median filtering
+            from scipy.signal import medfilt
+            baseline_signal = medfilt(self.signal_data, kernel_size=15)
+            
+            # Analyze frequency content
+            fft_vals = np.abs(fft(baseline_signal))
+            freqs = fftfreq(len(baseline_signal), d=1.0)
+            
+            # Look for dominant frequencies
+            dominant_freq_idx = np.argmax(fft_vals[1:len(fft_vals)//2]) + 1
+            dominant_freq = freqs[dominant_freq_idx]
+            
+            # Check for regular sawtooth pattern (Flutter) vs irregular (Fibrillation)
+            baseline_regularity = np.std(np.diff(baseline_signal)) / np.mean(np.abs(baseline_signal))
+            
+            if baseline_regularity < 0.3 and abs(dominant_freq) > 0.1:
+                return "seesaw"  # Regular sawtooth pattern (Flutter)
+            elif baseline_regularity > 0.5:
+                return "fibrillating"  # Irregular baseline (Fibrillation)
+            else:
+                return "normal"
+        except:
+            return "unknown"
+    
+    def _analyze_baseline_pattern(self):
+        """Analyze baseline pattern to distinguish Flutter seesaw from Fibrillation"""
+        if len(self.signal_data) == 0:
+            return "unknown"
+        
+        try:
+            # Analyze frequency components in baseline
+            from scipy.fft import fft, fftfreq
+            
+            # Remove QRS complexes by median filtering
+            from scipy.signal import medfilt
+            baseline_signal = medfilt(self.signal_data, kernel_size=15)
+            
+            # Analyze frequency content
+            fft_vals = np.abs(fft(baseline_signal))
+            freqs = fftfreq(len(baseline_signal), d=1.0)
+            
+            # Look for dominant frequencies
+            dominant_freq_idx = np.argmax(fft_vals[1:len(fft_vals)//2]) + 1
+            dominant_freq = freqs[dominant_freq_idx]
+            
+            # Check for regular sawtooth pattern (Flutter) vs irregular (Fibrillation)
+            baseline_regularity = np.std(np.diff(baseline_signal)) / np.mean(np.abs(baseline_signal))
+            
+            if baseline_regularity < 0.3 and abs(dominant_freq) > 0.1:
+                return "seesaw"  # Regular sawtooth pattern (Flutter)
+            elif baseline_regularity > 0.5:
+                return "fibrillating"  # Irregular baseline (Fibrillation)
+            else:
+                return "normal"
+        except:
+            return "unknown"
 
 # Global function for Django integration
 def analyze_ecg_image(image_path):

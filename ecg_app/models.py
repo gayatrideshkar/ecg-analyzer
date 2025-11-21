@@ -9,7 +9,7 @@ class ECGImage(models.Model):
     patient_age = models.PositiveIntegerField(blank=False, help_text="Patient's age in years")
     patient_dob = models.DateField(blank=False, null=True, help_text="Patient's date of birth")
     patient_gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], default='Other', blank=False, help_text="Patient's gender")
-    patient_phone = models.CharField(max_length=20, blank=False, help_text="Patient's phone number")
+    patient_phone = models.CharField(max_length=20, blank=False, help_text="Patient's 10-digit phone number (format: XXXXXXXXXX)")
     
     # File Information
     image = models.ImageField(upload_to='ecg_uploads/')
@@ -84,13 +84,110 @@ class ECGImage(models.Model):
                 os.remove(self.image.path)
         self.delete()
 
+
+class EchoImage(models.Model):
+    """Model for storing 2D Echocardiogram video files and analysis results"""
+    
+    # Patient Details
+    patient_name = models.CharField(max_length=255, blank=False, help_text="Patient's full name")
+    patient_age = models.PositiveIntegerField(blank=False, help_text="Patient's age in years")
+    patient_dob = models.DateField(blank=False, null=True, help_text="Patient's date of birth")
+    patient_gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], default='Other', blank=False, help_text="Patient's gender")
+    patient_phone = models.CharField(max_length=20, blank=False, help_text="Patient's 10-digit phone number (format: XXXXXXXXXX)")
+    
+    # Echo File Information
+    echo_file = models.FileField(upload_to='echo_uploads/', help_text="Upload echo video file (MP4, AVI, DICOM)")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    analyzed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Store detailed analysis results from echo analyzer
+    analysis_results = models.JSONField(null=True, blank=True)
+    
+    # File metadata
+    file_name = models.CharField(max_length=255, null=True, blank=True)
+    file_size = models.IntegerField(null=True, blank=True)  # Size in bytes
+    
+    # Analysis summary for quick access
+    view_classification = models.CharField(max_length=100, null=True, blank=True)  # A4C, A2C, etc.
+    ejection_fraction = models.FloatField(null=True, blank=True)
+    ef_classification = models.CharField(max_length=50, null=True, blank=True)  # Normal, Borderline, Reduced
+    analysis_quality = models.CharField(max_length=50, null=True, blank=True)
+    processing_status = models.CharField(max_length=50, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('error', 'Error'),
+    ])
+    error_message = models.TextField(null=True, blank=True)
+    overall_impression = models.TextField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        patient_display = self.patient_name or "Unknown Patient"
+        age_display = self.patient_age or "Unknown Age"
+        ef_display = f"EF: {self.ejection_fraction}%" if self.ejection_fraction else "EF: Pending"
+        return f"Echo {self.id} - {patient_display} ({age_display}y) - {ef_display} - {self.uploaded_at.strftime('%Y-%m-%d %H:%M')}"
+    
+    def get_file_size_display(self):
+        """Return human-readable file size"""
+        if self.file_size:
+            if self.file_size < 1024:
+                return f"{self.file_size} B"
+            elif self.file_size < 1024 * 1024:
+                return f"{self.file_size / 1024:.1f} KB"
+            elif self.file_size < 1024 * 1024 * 1024:
+                return f"{self.file_size / (1024 * 1024):.1f} MB"
+            else:
+                return f"{self.file_size / (1024 * 1024 * 1024):.1f} GB"
+        return "Unknown"
+    
+    def save_analysis_results(self, analysis_data):
+        """Save analysis results from echo analyzer"""
+        self.analysis_results = analysis_data
+        self.analyzed_at = timezone.now()
+        
+        # Extract summary fields for quick access
+        if analysis_data and not analysis_data.get('error'):
+            self.view_classification = analysis_data.get('view', '')
+            self.ejection_fraction = analysis_data.get('ef')
+            
+            # Classify EF
+            if self.ejection_fraction:
+                if self.ejection_fraction >= 50:
+                    self.ef_classification = 'Normal'
+                elif self.ejection_fraction >= 40:
+                    self.ef_classification = 'Borderline'
+                else:
+                    self.ef_classification = 'Reduced'
+            
+            self.analysis_quality = f"{analysis_data.get('confidence', 0) * 100:.1f}%" if analysis_data.get('confidence') else None
+            self.overall_impression = analysis_data.get('impression', 'Echo analysis completed')
+            self.processing_status = 'completed'
+        else:
+            self.processing_status = 'error'
+            self.error_message = analysis_data.get('error', 'Unknown error') if analysis_data else 'Analysis failed'
+        
+        self.save()
+    
+    def delete_with_file(self):
+        """Delete the Echo record and associated video file"""
+        if self.echo_file:
+            if os.path.isfile(self.echo_file.path):
+                os.remove(self.echo_file.path)
+        self.delete()
+
+
+# Create your models here.
+
 class EchoImage(models.Model):
     # Patient Information
     patient_name = models.CharField(max_length=255, blank=False, help_text="Patient's full name")
     patient_age = models.PositiveIntegerField(blank=False, help_text="Patient's age in years")
     patient_dob = models.DateField(blank=False, null=True, help_text="Patient's date of birth")
-    patient_phone = models.CharField(max_length=20, blank=False, help_text="Patient's phone number")
-    patient_gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')])
+    patient_gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], default='Other', blank=False, help_text="Patient's gender")
+    patient_phone = models.CharField(max_length=20, blank=False, help_text="Patient's 10-digit phone number (format: XXXXXXXXXX)")
     
     # File Information
     echo_file = models.FileField(upload_to='echo_uploads/')
@@ -165,5 +262,96 @@ class EchoImage(models.Model):
             if os.path.isfile(self.echo_file.path):
                 os.remove(self.echo_file.path)
         self.delete()
+
+
+class EchoImage(models.Model):
+    """Model for storing echocardiogram video files and analysis results"""
+    
+    # Patient Details
+    patient_name = models.CharField(max_length=255, blank=False, help_text="Patient's full name")
+    patient_age = models.PositiveIntegerField(blank=False, help_text="Patient's age in years")
+    patient_dob = models.DateField(blank=False, null=True, help_text="Patient's date of birth")
+    patient_gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female'), ('Other', 'Other')], default='Other', blank=False, help_text="Patient's gender")
+    patient_phone = models.CharField(max_length=20, blank=False, help_text="Patient's 10-digit phone number (format: XXXXXXXXXX)")
+    
+    # Echo File Information
+    echo_file = models.FileField(upload_to='echo_uploads/', help_text="Upload echo video file (MP4, AVI, DICOM)")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    # Store detailed analysis results from echo analyzer
+    analysis_results = models.JSONField(null=True, blank=True)
+    
+    # File metadata
+    file_name = models.CharField(max_length=255, null=True, blank=True)
+    file_size = models.IntegerField(null=True, blank=True)  # Size in bytes
+    
+    # Analysis summary for quick access
+    view_classification = models.CharField(max_length=100, null=True, blank=True)  # A4C, A2C, etc.
+    ejection_fraction = models.FloatField(null=True, blank=True)
+    ef_classification = models.CharField(max_length=50, null=True, blank=True)  # Normal, Borderline, Reduced
+    analysis_quality = models.CharField(max_length=50, null=True, blank=True)
+    processing_status = models.CharField(max_length=50, default='pending', choices=[
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('error', 'Error'),
+    ])
+    error_message = models.TextField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        patient_display = self.patient_name or "Unknown Patient"
+        age_display = self.patient_age or "Unknown Age"
+        ef_display = f"EF: {self.ejection_fraction}%" if self.ejection_fraction else "EF: Pending"
+        return f"Echo {self.id} - {patient_display} ({age_display}y) - {ef_display} - {self.uploaded_at.strftime('%Y-%m-%d %H:%M')}"
+    
+    def get_file_size_display(self):
+        """Return human-readable file size"""
+        if self.file_size:
+            if self.file_size < 1024:
+                return f"{self.file_size} B"
+            elif self.file_size < 1024 * 1024:
+                return f"{self.file_size / 1024:.1f} KB"
+            elif self.file_size < 1024 * 1024 * 1024:
+                return f"{self.file_size / (1024 * 1024):.1f} MB"
+            else:
+                return f"{self.file_size / (1024 * 1024 * 1024):.1f} GB"
+        return "Unknown"
+    
+    def save_analysis_results(self, analysis_data):
+        """Save analysis results from echo analyzer"""
+        self.analysis_results = analysis_data
+        
+        # Extract summary fields for quick access
+        if analysis_data and not analysis_data.get('error'):
+            self.view_classification = analysis_data.get('view', '')
+            self.ejection_fraction = analysis_data.get('ef')
+            
+            # Classify EF
+            if self.ejection_fraction:
+                if self.ejection_fraction >= 50:
+                    self.ef_classification = 'Normal'
+                elif self.ejection_fraction >= 40:
+                    self.ef_classification = 'Borderline'
+                else:
+                    self.ef_classification = 'Reduced'
+            
+            self.analysis_quality = analysis_data.get('confidence', 0) * 100 if analysis_data.get('confidence') else None
+            self.processing_status = 'completed'
+        else:
+            self.processing_status = 'error'
+            self.error_message = analysis_data.get('error', 'Unknown error') if analysis_data else 'Analysis failed'
+        
+        self.save()
+    
+    def delete_with_file(self):
+        """Delete the Echo record and associated video file"""
+        if self.echo_file:
+            if os.path.isfile(self.echo_file.path):
+                os.remove(self.echo_file.path)
+        self.delete()
+
 
 # Create your models here.

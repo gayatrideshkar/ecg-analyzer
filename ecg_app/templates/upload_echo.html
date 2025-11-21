@@ -379,6 +379,67 @@
                 analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Echo...';
                 analyzeBtn.disabled = true;
             });
+            
+            // Phone number validation (no formatting)
+            const phoneInput = document.querySelector('input[name="patient_phone"]');
+            if (phoneInput) {
+                // Ensure correct placeholder is set
+                phoneInput.placeholder = 'Enter Phone number';
+                
+                // Keep digits only as user types - no formatting
+                phoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
+                    
+                    // Limit to 10 digits
+                    if (value.length > 10) {
+                        value = value.slice(0, 10);
+                    }
+                    
+                    // Set plain digits - no formatting
+                    e.target.value = value;
+                });
+                
+                // Validate on blur
+                phoneInput.addEventListener('blur', function(e) {
+                    const digitsOnly = e.target.value.replace(/\D/g, '');
+                    const errorDiv = phoneInput.parentNode.querySelector('.phone-error');
+                    
+                    // Remove existing error
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                    
+                    if (digitsOnly.length > 0 && digitsOnly.length !== 10) {
+                        // Add error message
+                        const error = document.createElement('div');
+                        error.className = 'phone-error text-danger small';
+                        error.style.marginTop = '0.25rem';
+                        error.textContent = 'Please enter exactly 10 digits';
+                        phoneInput.parentNode.appendChild(error);
+                        phoneInput.classList.add('is-invalid');
+                    } else if (digitsOnly.length === 10 && (digitsOnly[0] === '0' || digitsOnly[0] === '1')) {
+                        // Check for invalid starting digit (area code cannot start with 0 or 1)
+                        const error = document.createElement('div');
+                        error.className = 'phone-error text-danger small';
+                        error.style.marginTop = '0.25rem';
+                        error.textContent = 'Area code cannot start with 0 or 1';
+                        phoneInput.parentNode.appendChild(error);
+                        phoneInput.classList.add('is-invalid');
+                    } else if (digitsOnly.length === 10) {
+                        phoneInput.classList.remove('is-invalid');
+                        phoneInput.classList.add('is-valid');
+                    }
+                });
+                
+                // Clear error styling on focus
+                phoneInput.addEventListener('focus', function(e) {
+                    const errorDiv = phoneInput.parentNode.querySelector('.phone-error');
+                    if (errorDiv) {
+                        errorDiv.remove();
+                    }
+                    phoneInput.classList.remove('is-invalid', 'is-valid');
+                });
+            }
         });
     </script>
 </body>
