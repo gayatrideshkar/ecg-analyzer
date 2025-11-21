@@ -248,9 +248,9 @@
                     <a href="{% url 'uploaded_files' %}" class="btn-action btn-back">
                         <i class="fas fa-arrow-left"></i> Back to Files
                     </a>
-                    <button onclick="refreshToHome()" class="btn-action" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+                    {% comment %} <button onclick="refreshToHome()" class="btn-action" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
                         <i class="fas fa-sync-alt"></i> Refresh to Home
-                    </button>
+                    </button> {% endcomment %}
                     <button class="btn-action btn-delete-detail" onclick="confirmDelete({{ ecg_file.id }}, '{{ ecg_file.file_name|default:"this file" }}')">
                         <i class="fas fa-trash"></i> Delete File
                     </button>

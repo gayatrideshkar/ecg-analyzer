@@ -634,31 +634,7 @@
         {% csrf_token %}
         
         <!-- Navigation -->
-        <div class="main-card" style="margin-bottom: 20px;">
-            <div class="upload-section" style="padding: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                    <div>
-                        <a href="{% url 'home' %}" class="upload-btn" style="text-decoration: none; margin-right: 10px;">
-                            <i class="fas fa-chart-line"></i> ECG Analysis
-                        </a>
-                        <a href="{% url 'upload_echo' %}" class="upload-btn" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); text-decoration: none; margin-right: 10px;">
-                            <i class="fas fa-heart"></i> Echo Analysis
-                        </a>
-                        <a href="{% url 'echo_files_list' %}" class="upload-btn" style="background: linear-gradient(135deg, #74b9ff, #0984e3); text-decoration: none;">
-                            <i class="fas fa-video"></i> Echo Files
-                        </a>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <span style="color: var(--text-dark); font-weight: 500;">
-                            <i class="fas fa-user"></i> Welcome, {{ user.first_name|default:user.username }}!
-                        </span>
-                        <a href="{% url 'logout' %}" class="upload-btn" style="background: linear-gradient(135deg, var(--danger-color), #c82333); text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% include "header.html" %}
 
         <!-- Search Bar -->
         <div class="search-section">

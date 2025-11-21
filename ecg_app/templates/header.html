@@ -1,0 +1,140 @@
+{% load static %}
+<!-- Navigation Header Styles -->
+<style>
+    :root {
+        --primary-color: #ff6b6b;
+        --secondary-color: #ee5a24;
+        --accent-color: #74b9ff;
+        --success-color: #00b894;
+        --warning-color: #fdcb6e;
+        --danger-color: #e17055;
+        --dark-color: #2d3436;
+        --light-color: #ddd;
+        --text-dark: #2d3436;
+        --text-light: #636e72;
+        --background: #f8f9fa;
+        --card-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .navigation-bar {
+        background: white;
+        border-radius: 15px;
+        padding: 20px 30px;
+        margin-bottom: 20px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .nav-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .nav-left {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .nav-btn {
+        background: linear-gradient(135deg, var(--accent-color), #0984e3);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+    }
+
+    .nav-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .nav-btn.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .user-info {
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .logout-btn {
+        background: linear-gradient(135deg, var(--danger-color), #c82333);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .logout-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(225, 112, 85, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .nav-buttons {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .nav-left {
+            justify-content: center;
+        }
+
+        .nav-right {
+            justify-content: center;
+        }
+    }
+</style>
+
+<!-- Navigation Bar -->
+<div class="navigation-bar">
+    <div class="nav-buttons">
+        <div class="nav-left">
+            <a href="{% url 'home' %}" class="nav-btn {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> ECG Analysis
+            </a>
+            <a href="{% url 'upload_echo' %}" class="nav-btn {% if request.resolver_match.url_name == 'upload_echo' %}active{% endif %}">
+                <i class="fas fa-heart"></i> Echo Analysis
+            </a>
+            <a href="{% url 'uploaded_files' %}" class="nav-btn {% if request.resolver_match.url_name == 'uploaded_files' %}active{% endif %}">
+                <i class="fas fa-folder"></i> ECG Files
+            </a>
+            <a href="{% url 'echo_files_list' %}" class="nav-btn {% if request.resolver_match.url_name == 'echo_files_list' %}active{% endif %}">
+                <i class="fas fa-video"></i> Echo Files
+            </a>
+        </div>
+        <div class="nav-right">
+            <span class="user-info">
+                <i class="fas fa-user"></i> Welcome, {{ user.first_name|default:user.username }}!
+            </span>
+            <a href="{% url 'logout' %}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+</div>

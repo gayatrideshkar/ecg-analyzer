@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI ECG Analyzer - Advanced Cardiac Analysis</title>
-    <link rel="stylesheet" href="{% static 'ecg_app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'ecg_app/css/styles.css' %}?v={{ now }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @keyframes spin {
@@ -94,34 +94,9 @@
         </header>
 
         <!-- Navigation Bar -->
-        <div class="main-card" style="margin-bottom: 20px;">
-            <div class="upload-section" style="padding: 15px 30px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                    <div>
-                        <a href="{% url 'home' %}" class="upload-btn" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); text-decoration: none; margin-right: 10px;">
-                            <i class="fas fa-chart-line"></i> ECG Analysis
-                        </a>
-                        <a href="{% url 'upload_echo' %}" class="upload-btn" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24); text-decoration: none; margin-right: 10px;">
-                            <i class="fas fa-heart"></i> Echo Analysis
-                        </a>
-                        <a href="{% url 'uploaded_files' %}" class="upload-btn" style="background: linear-gradient(135deg, #6c757d, #5a6268); text-decoration: none; margin-right: 10px;">
-                            <i class="fas fa-folder"></i> ECG Files
-                        </a>
-                        <a href="{% url 'echo_files_list' %}" class="upload-btn" style="background: linear-gradient(135deg, #74b9ff, #0984e3); text-decoration: none;">
-                            <i class="fas fa-video"></i> Echo Files
-                        </a>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <span style="color: var(--text-dark); font-weight: 500;">
-                            <i class="fas fa-user"></i> Welcome, {{ user.first_name|default:user.username }}!
-                        </span>
-                        <a href="{% url 'logout' %}" class="upload-btn" style="background: linear-gradient(135deg, var(--danger-color), #c82333); text-decoration: none; padding: 8px 15px; font-size: 0.9rem;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
+            {% include "header.html" %}
+        
 
         <!-- Success/Error Messages -->
         {% if messages %}
@@ -148,7 +123,7 @@
                     
                     <!-- Patient Details Section -->
                     <div class="patient-details-section">
-                        <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">
+                        <h3 style="color:  #2d3436; margin-bottom: 20px; text-align: center;">
                             <i class="fas fa-user-md"></i> Patient Information
                         </h3>
                         
@@ -207,7 +182,7 @@
                     
                     <!-- File Upload Section -->
                     <div class="file-upload-section">
-                        <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">
+                        <h3 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">
                             <i class="fas fa-file-medical"></i> ECG Image Upload
                         </h3>
                         
@@ -433,7 +408,7 @@
                                 <div class="analysis-grid">
                                     <div class="analysis-item">
                                         <h5><i class="fas fa-tachometer-alt"></i> Rate</h5>
-                                        <div class="analysis-value" style="font-size: 1.5rem; color: var(--primary-color);">
+                                        <div class="analysis-value" style="font-size: 1.5rem; color:  #2d3436;">
                                             {{ result.advanced_analysis.rate|default:"75" }}
                                         </div>
                                         <div class="analysis-detail">Ventricular rate</div>
@@ -892,7 +867,7 @@
                 // Drag and drop functionality
                 fileInputArea.addEventListener('dragover', function(e) {
                     e.preventDefault();
-                    this.style.borderColor = 'var(--primary-color)';
+                    this.style.borderColor = ' #2d3436';
                     this.style.background = '#bbdefb';
                 });
 

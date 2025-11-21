@@ -235,7 +235,7 @@ class EchoUploadForm(forms.ModelForm):
         max_length=20,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'XXXXXXXXXX',
+            'placeholder': 'Enter Phone number',
             'pattern': '[0-9]{10}',
             'title': 'Please enter a 10-digit phone number',
             'required': True
