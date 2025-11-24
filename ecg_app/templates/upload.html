@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI ECG Analyzer - Advanced Cardiac Analysis</title>
-    <link rel="stylesheet" href="{% static 'ecg_app/css/styles.css' %}?v={{ now }}">
+    <link rel="stylesheet" href="{% static 'ecg_app/css/styles.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @keyframes spin {
@@ -182,7 +182,7 @@
                     
                     <!-- File Upload Section -->
                     <div class="file-upload-section">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">
+                        <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">
                             <i class="fas fa-file-medical"></i> ECG Image Upload
                         </h3>
                         
